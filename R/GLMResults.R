@@ -230,7 +230,7 @@
 #'                      altixname = "Quarter Mile Time")
 #' 
 #' # Robust Poisson regression
-#' glmres <- GLMResults(carpreds, c("vs", "am"), c("gear", "carb"), mtcars, 
+#' glmres <- GLMResults(carpreds[-1], c("vs", "am"), c("gear", "carb"), mtcars, 
 #'                      binomlink = "log", binfunc = poisson,  
 #'                      altprednames = c("Displacement", "Cylinders", "Axle Ratio", 
 #'                      "Weight"), altoutnames = c("Engine Type", "Transmission Type"))
@@ -1290,40 +1290,57 @@ GLMResults <- function(prednames, outnames, covnames = NULL, Data, logout = F,
         geom_errorbar(aes(ymin=LCI.Transform,ymax=UCI.Transform),
                       width=0.4,linewidth=1)+
         geom_point()+geom_hline(aes(yintercept=horint))+
-        geom_text(aes(y=UCI.Transform,vjust= -1,
+        geom_text(aes(y=UCI.Transform,vjust=-0.5,
                       label=star),show.legend=F,size=6)+
         facet_wrap(formula(paste0(".~",Outtitle)),scales="free",ncol=facetcol)+
         ylab(yl)+xlab(paste0(Predtitle))+
         scale_color_manual(values=c("black","red"),guide="none")+
         theme(axis.text.x=element_text(angle=45,hjust=1))
     } else {
-      gg1.x<-ggplot(data=plotData,aes(x=Predictor,y=Beta.Transform,
-                                      color=Interaction_Level))+
-        geom_errorbar(aes(ymin=LCI.Transform,ymax=UCI.Transform),
-                      width=0.4,linewidth=1,position=position_dodge(0.75))+
-        geom_point(position=position_dodge(0.75))+geom_hline(aes(yintercept=horint))+
-        geom_text(aes(y=UCI.Transform,label=star),vjust=-1,
-                  position=position_dodge(0.75),show.legend=F,size=6)+
-        facet_wrap(formula(paste0(".~",Outtitle)),scales="free",ncol=facetcol)+
-        ylab("Exp(Beta)")+xlab(paste0(Predtitle))+ggtitle("Marginal Coefficients")+
-        scale_color_brewer(palette="Set1",name="Interaction Level")+
-        theme(axis.text.x=element_text(angle=45,hjust=1),
-              legend.position = "bottom",
-              plot.title=element_text(hjust=0.5))
-      gg2<-ggplot(data=plotData.ix,
-                  aes(x=Predictor,y=Beta.Transform,color=Interaction_Level))+
-        geom_errorbar(aes(ymin=LCI.Transform,ymax=UCI.Transform),
-                      width=0.4,linewidth=1,position=position_dodge(0.75))+
-        geom_point(position=position_dodge(0.75))+geom_hline(aes(yintercept=horint))+
-        geom_text(aes(y=UCI.Transform,label=star),vjust=-1,
-                  position=position_dodge(0.75),show.legend=F,size=6)+
-        facet_wrap(formula(paste0(".~",Outtitle)),scales="free",ncol=facetcol)+
-        ylab(yl)+xlab(paste0(Predtitle))+ggtitle("Interaction Coefficients")+
-        scale_color_brewer(palette="Dark2",name="Interaction")+
-        theme(axis.text.x=element_text(angle=45,hjust=1),
-              legend.position = "bottom",
-              plot.title=element_text(hjust=0.5))
-      gg1<-cowplot::plot_grid(gg1.x,gg2,nrow=2)
+      if(class(Data[,ixterm])=="factor"){
+        gg1.x<-ggplot(data=plotData,aes(x=Predictor,y=Beta.Transform,
+                                        color=Interaction_Level))+
+          geom_errorbar(aes(ymin=LCI.Transform,ymax=UCI.Transform),
+                        width=0.4,linewidth=1,position=position_dodge(0.75))+
+          geom_point(position=position_dodge(0.75))+geom_hline(aes(yintercept=horint))+
+          geom_text(aes(y=UCI.Transform,label=star),vjust=-0.5,
+                    position=position_dodge(0.75),show.legend=F,size=6)+
+          facet_wrap(formula(paste0(".~",Outtitle)),scales="free",ncol=facetcol)+
+          ylab("Exp(Beta)")+xlab(paste0(Predtitle))+ggtitle("Marginal Coefficients")+
+          scale_color_brewer(palette="Set1",name="Interaction Level")+
+          theme(axis.text.x=element_text(angle=45,hjust=1),
+                legend.position = "bottom",
+                plot.title=element_text(hjust=0.5))
+        gg2<-ggplot(data=plotData.ix,
+                    aes(x=Predictor,y=Beta.Transform,color=Interaction_Level))+
+          geom_errorbar(aes(ymin=LCI.Transform,ymax=UCI.Transform),
+                        width=0.4,linewidth=1,position=position_dodge(0.75))+
+          geom_point(position=position_dodge(0.75))+geom_hline(aes(yintercept=horint))+
+          geom_text(aes(y=UCI.Transform,label=star),vjust=-0.5,
+                    position=position_dodge(0.75),show.legend=F,size=6)+
+          facet_wrap(formula(paste0(".~",Outtitle)),scales="free",ncol=facetcol)+
+          ylab(yl)+xlab(paste0(Predtitle))+ggtitle("Interaction Coefficients")+
+          scale_color_brewer(palette="Dark2",name="Interaction")+
+          theme(axis.text.x=element_text(angle=45,hjust=1),
+                legend.position = "bottom",
+                plot.title=element_text(hjust=0.5))
+        gg1<-cowplot::plot_grid(gg1.x,gg2,nrow=2)
+      } else {
+        gg1<-ggplot(data=plotData.ix,
+                    aes(x=Predictor,y=Beta.Transform,color=Significant))+
+          geom_errorbar(aes(ymin=LCI.Transform,ymax=UCI.Transform),
+                        width=0.4,linewidth=1)+
+          geom_point()+geom_hline(aes(yintercept=horint))+
+          geom_text(aes(y=UCI.Transform,label=star),vjust=-0.5,
+                    show.legend=F,size=6)+
+          facet_wrap(formula(paste0(".~",Outtitle)),scales="free",ncol=facetcol)+
+          ylab(yl)+xlab(paste0(Predtitle))+ggtitle("Interaction Coefficients")+
+          scale_color_manual(values=c("black","red"),guide="none")+
+          theme(axis.text.x=element_text(angle=45,hjust=1),
+                legend.position = "bottom",
+                plot.title=element_text(hjust=0.5))
+      }
+      
     } 
   } else {
     warning(paste0("No plots are being output, as it was unclear how best to",

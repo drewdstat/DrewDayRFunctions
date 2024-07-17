@@ -314,7 +314,7 @@ glmres <- GLMResults(carpreds, c("vs", "am"), c("gear", "carb"), mtcars,
                      altixname = "Quarter Mile Time")
 
 # Robust Poisson regression
-glmres <- GLMResults(carpreds, c("vs", "am"), c("gear", "carb"), mtcars, 
+glmres <- GLMResults(carpreds[-1], c("vs", "am"), c("gear", "carb"), mtcars, 
                      binomlink = "log", binfunc = poisson,  
                      altprednames = c("Displacement", "Cylinders", "Axle Ratio", 
                      "Weight"), altoutnames = c("Engine Type", "Transmission Type"))
