@@ -37,14 +37,16 @@ variables.}
 vectors of covariates of the same length as \code{length(prednames) * 
 length(outnames)} so that each unique combination of prednames and outnames
 has a defined set of covariates. Note that in ordering this list the function
-loops through the prednames and then the outnames (e.g., Outcome 1 - Predictor
-1, Outcome 1 - Predictor 2, Outcome 1 - Predictor 3, Outcome 2 - Predictor 1,
-etc.), and so you should order the list of covariates accordingly. These
-covariates will be included as linear (i.e., not smooth) terms in the model.
-If you wish to include splines from the 'splines' package for nonlinear
-associations with these covariates, you can wrap covariate values in
-\code{ns()} (i.e., natural spline) or \code{bs()} (i.e., b-spline) (e.g.,
-\code{"ns(Age, 3)"}).}
+loops through the \code{prednames} and then the \code{outnames} (e.g.,
+Outcome 1 - Predictor 1, Outcome 1 - Predictor 2, Outcome 1 - Predictor 3,
+Outcome 2 - Predictor 1, etc.), and so you should order the list of covariates
+accordingly. These covariates will be included as linear (i.e., not smooth)
+terms in the model. These can include spline terms, such as
+\code{\link[splines]{ns}} natural splines or \code{\link[splines]{bs}}
+b-splines as defined by the 'splines' package (e.g., \code{"ns(Year, df=3)"}).
+These can also include interaction terms denoted by the ":" separator , though
+you should make sure to include the main effects too (e.g., \code{c("Income", 
+"HouseholdSize", "Income:HouseholdSize")}).}
 
 \item{Data}{A data frame containing all prednames, outnames, and covnames as
 columns.}
@@ -171,7 +173,7 @@ k = K_ti) + ti(x, iota, bs = bs_ti, k = K_ti) + z, ...)} where iota is the inter
 variable. This is implemented as it is in the
 \href{https://pennlinc.github.io/ModelArray/reference/generator_gamFormula_continuousInteraction.html}{ModelArray R package}
 and as succinctly described on this linguistics professor's
-\hrep{https://janhove.github.io/posts/2017-06-26-continuous-interactions/}{blog post}.
+\href{https://janhove.github.io/posts/2017-06-26-continuous-interactions/}{blog post}.
 
 In the case of a categorical interacting variable (i.e., \code{ixterm}), two
 separate models are run to obtain all the relevant parameter estimates. The
@@ -183,13 +185,13 @@ model we can obtain curves of the differences between those level-specific
 curves. Note that theoretically the curve for the referent level produced by
 the second term "s(x)" in the second model should theoretically be equivalent
 to the referent level curve produced by the first term in the first model, but
-in practice they tend to have miniscule difference in EDF, exact fitted curve
-values, etc., but it's close enough I find it conventient to grab terms from
+in practice they tend to have minuscule difference in EDF, exact fitted curve
+values, etc., but it's close enough I find it convenient to grab terms from
 these two models as if they were equivalent. Further explanation of both models can
 be found at
-\hrep{https://stats.stackexchange.com/questions/416991/gam-factor-smooth-interaction-include-main-effect-smooth}{this CrossValidated blog post}.
-Examples of the second model are shown in \hrep{https://fromthebottomoftheheap.net/2017/12/14/difference-splines-ii/}{this blog post}
-and in example papers like \hrep{https://www.nature.com/articles/s44161-022-00131-8}{Zhernakova et al. 2022}.
+\href{https://stats.stackexchange.com/questions/416991/gam-factor-smooth-interaction-include-main-effect-smooth}{this CrossValidated blog post}.
+Examples of the second model are shown in \href{https://fromthebottomoftheheap.net/2017/12/14/difference-splines-ii/}{this blog post}
+and in example papers like \href{https://www.nature.com/articles/s44161-022-00131-8}{Zhernakova et al. 2022}.
 }
 \examples{
 # The first example involves analyzing several GAMs with no interaction terms.
@@ -221,7 +223,7 @@ gamdat2$yhat <- gamdat2$yhat + gamdat2$Z * 2
 set.seed(101)
 gamdat2$y <- gamdat2$yhat + rnorm(500)
 
-gamres2 <- GAMResutls("X", "y", "Z", gamdat2, ixterm = "S")
+gamres2 <- GAMResults("X", "y", "Z", gamdat2, ixterm = "S")
 
 gridPrint(grobs = gamres2$Plots$`y~X`)
 
