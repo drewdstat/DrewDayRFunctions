@@ -212,7 +212,7 @@ GAMResults <- function(prednames, outnames, covnames = NULL, Data, logout = F,
   }
   
   lmlist<-list()
-  if(!is.null(ixterm)&class(Data[,ixterm])=="factor"){
+  if(!is.null(ixterm)&&class(Data[,ixterm])=="factor"){
     lmlist2<-list()
   }
   
@@ -338,7 +338,7 @@ GAMResults <- function(prednames, outnames, covnames = NULL, Data, logout = F,
           ccDat<-ccDat[-which(ccDat[,prednames[j]]<quantile(ccDat[,prednames[j]],trimperc/100)|
                               ccDat[,prednames[j]]>quantile(ccDat[,prednames[j]],
                                                            1-(trimperc/100))),]
-          if(!is.null(ixterm)&class(Data[,ixterm])!="factor"){
+          if(!is.null(ixterm)&&class(Data[,ixterm])!="factor"){
             Data<-Data[-which(Data[,ixterm]<quantile(Data[,ixterm],trimperc/100,na.rm=T)|
                                 Data[,ixterm]>quantile(Data[,ixterm],
                                                              1-(trimperc/100),na.rm=T)),]
@@ -367,7 +367,7 @@ GAMResults <- function(prednames, outnames, covnames = NULL, Data, logout = F,
         g1<-gam(gamform1,data=Data,select=smooth.select,na.action=na.action,family=binomial)
         g1.nona<-gam(gamform1,data=ccDat,select=smooth.select,na.action=na.action,
                      family=binomial)
-        if(!is.null(ixterm)&class(Data[,ixterm])=="factor"){
+        if(!is.null(ixterm)&&class(Data[,ixterm])=="factor"){
           g2<-gam(gamform2,data=Data,select=smooth.select,na.action=na.action,
                   family=binomial)
           g2.nona<-gam(gamform2,data=ccDat,select=smooth.select,na.action=na.action,
@@ -378,7 +378,7 @@ GAMResults <- function(prednames, outnames, covnames = NULL, Data, logout = F,
         lm1<-lm(form1,data=Data,na.action=na.action)
         g1<-gam(gamform1,data=Data,select=smooth.select,na.action=na.action)
         g1.nona<-gam(gamform1,data=ccDat,select=smooth.select,na.action=na.action)
-        if(!is.null(ixterm)&class(Data[,ixterm])=="factor"){
+        if(!is.null(ixterm)&&class(Data[,ixterm])=="factor"){
           g2<-gam(gamform2,data=Data,select=smooth.select,na.action=na.action)
           g2.nona<-gam(gamform2,data=ccDat,select=smooth.select,na.action=na.action)
           lmlist2[[lmnum]]<-g2.nona
@@ -411,14 +411,14 @@ GAMResults <- function(prednames, outnames, covnames = NULL, Data, logout = F,
         }
       }
       
-      if(!is.null(ixterm)&class(Data[,ixterm])!="factor"){
+      if(!is.null(ixterm)&&class(Data[,ixterm])!="factor"){
         mysumrows<-c(1:3)
       } else {
         mysumrows<-1
       }
-      if(!is.null(ixterm)&class(Data[,ixterm])=="factor"){
+      if(!is.null(ixterm)&&class(Data[,ixterm])=="factor"){
         Resultsmat[rownum,4:9]<-myvalmat
-      } else if(!is.null(ixterm)&class(Data[,ixterm])!="factor"){
+      } else if(!is.null(ixterm)&&class(Data[,ixterm])!="factor"){
         Resultsmat[rownum,4:9]<-cbind(summary(g1)$s.table[mysumrows,c(1,4)],
                                       k.check(g1.nona)[mysumrows,c(1,3:4)],
                                       (summary(g1)$dev.expl*100))
@@ -588,7 +588,7 @@ GAMResults <- function(prednames, outnames, covnames = NULL, Data, logout = F,
     }#end of plot i loop
   }
   
-  if(!is.null(ixterm)&class(Data[,ixterm])=="factor"){
+  if(!is.null(ixterm)&&class(Data[,ixterm])=="factor"){
     names(lmlist2)<-names(lmlist)
     retlist<-list(Resmatout,gg1,lmlist,lmlist2)
     names(retlist)<-c("Matrix","Plots","GAMlist","IxGAMlist")
