@@ -38,12 +38,12 @@ This document outputs crude summary statistics separately for the continuous and
 
 Search through this table for column definitions.
 
-```{r dicttable}
+```{r dicttable, results = 'asis'}
 datatable(Dict, caption = "Data Dictionary", 
           rownames = F, options = list(pageLength = 10, rowsGroup = list(0), 
                                   initComplete  =  htmlwidgets::JS(
           "function(settings,  json) {", 
-          "$(this.api().table().header()).css({'font-size': '12px'});", "}")))%>%
+          "$(this.api().table().header()).css({'font-size': '12px'});", "}"))) %>%
   formatStyle(columns = colnames(Dict), fontSize = '12px')
 
 ```
