@@ -81,9 +81,9 @@ cowplot::plot_grid(plotlist = bplist, ncol = 5, align = "hv")
 
 ## Categorical Summary Statistics
 
-```{r cattable}
+```{r cattable, results = 'asis'}
 myvarcompsummary_cat_tab(catvars, Data, kable = T, fontsize = 11, scroll = T, 
-                         scrollwidth = "100%", scrollheight = "200px")
+                         scrollwidth = "100%", scrollheight = "400px")
 
 ```
 
