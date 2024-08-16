@@ -39,7 +39,7 @@ This document outputs crude summary statistics separately for the continuous and
 Search through this table for column definitions.
 
 ```{r dicttable}
-Datatable(Dict, caption = "Data Dictionary", 
+datatable(Dict, caption = "Data Dictionary", 
           rownames = F, options = list(pageLength = 10, rowsGroup = list(0), 
                                   initComplete  =  htmlwidgets::JS(
           "function(settings,  json) {", 
@@ -54,7 +54,7 @@ Datatable(Dict, caption = "Data Dictionary",
 
 ```{r conttable,  results = 'asis'}
 summ <- summtable_tt(contvars, Data)
-Datatable(summ, caption = "Continuous Covariate Summary Statistics", 
+datatable(summ, caption = "Continuous Covariate Summary Statistics", 
           rownames = F, options = list(pageLength = 10, rowsGroup = list(0), 
                                   initComplete  =  htmlwidgets::JS(
           "function(settings,  json) {", 
