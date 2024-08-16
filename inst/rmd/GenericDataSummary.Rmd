@@ -68,7 +68,7 @@ datatable(summ, caption = "Continuous Covariate Summary Statistics",
 ```{r boxplots}
 bplist <- list()
 for(i in contvars){
-  tmp <- Data.frame(Val = c(Data[, i]), xname = i)
+  tmp <- data.frame(Val = c(Data[, i]), xname = i)
   bplist[[i]] <- 
     ggplot(tmp, aes(x = xname, y = Val))+geom_boxplot()+theme_bw()+
     stat_summary(geom = "point", color = "red3", size = 3, 
