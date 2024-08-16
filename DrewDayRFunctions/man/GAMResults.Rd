@@ -210,7 +210,7 @@ gamdat1$y2 <- gamdat1$yhat2 + rnorm(500)
 gamres1 <- GAMResults(prednames = c("X1", "X2"), outnames = c("y1", "y2"), 
                       covnames = "Z", Data = gamdat1)
 
-gridPrint(grobs = gamres1$Plots, ncol = 2)
+mgcViz::gridPrint(grobs = gamres1$Plots, ncol = 2)
 
 # This next example involves a factor-smooth interaction
 
@@ -225,6 +225,6 @@ gamdat2$y <- gamdat2$yhat + rnorm(500)
 
 gamres2 <- GAMResults("X", "y", "Z", gamdat2, ixterm = "S")
 
-gridPrint(grobs = gamres2$Plots$`y~X`)
+mgcViz::gridPrint(grobs = gamres2$Plots$`y~X`)
 
 }

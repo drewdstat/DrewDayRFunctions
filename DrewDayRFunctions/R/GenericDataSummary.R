@@ -35,7 +35,7 @@
 #' # Make a data dictionary for the built-in iris dataset
 #' irisdd <- data.frame(Variable = names(iris), 
 #' Description = gsub("\\.", " ", names(iris)), Levels = "")
-#' irisdd[irisdd$Variable == "Species", "Levels"] <- 
+#' irisdd[irisdd$Variable == "Species", Levels] <- 
 #' paste(unique(iris$Species), collapse = ", ")
 #' 
 #' # create the summary document
@@ -64,5 +64,4 @@ GenericDataSummary <- function(filename = NULL, directory = getwd(),
     input = rmdpath,
     output_dir = directory,
     output_file = filename)
-  )
 }
