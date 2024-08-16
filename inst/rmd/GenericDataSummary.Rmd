@@ -38,7 +38,7 @@ This document outputs crude summary statistics separately for the continuous and
 
 Search through this table for column definitions.
 
-```{r dicttable, results = 'asis'}
+```{r dicttable}
 datatable(Dict, caption = "Data Dictionary", 
           rownames = F, options = list(pageLength = 10, rowsGroup = list(0), 
                                   initComplete  =  htmlwidgets::JS(
