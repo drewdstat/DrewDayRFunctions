@@ -90,7 +90,7 @@ the 'k' value default value for \code{\link[mgcv]{s}} is 10 (i.e., maximum
 EDF=9) when there is a single term in the smooth (e.g., \code{s(X1)}) and
 \code{bs="tp"}. For your information, the default \code{k} when using
 two-term smooths (e.g., \code{s(X1, X2)}) for \code{\link[mgcv]{s}} when
-\code{bs="tp"} is 30 and for >=3-term smooths this is 110 (see ?tprs).
+\code{bs="tp"} is 30 and for >=3-term smooths this is 110 (see \code{?tprs}).
 Note that increasing this value increases the subspace of functions (can be
 thought of as a ceiling on possible EDF values), and therefore higher
 \code{K} values can lead to higher EDF (see \code{?choose.k}).}
@@ -158,13 +158,13 @@ some nice visualizations and explanations of what GAMs are can be
 \details{
 \code{GAMResults} bases its models on the assumption that there will be only
 one univariate smooth term in each model for the predictor of interest and that
-utilizes the smooth function \code{\link[mgcv](s)} with a user-defined basis spline
+utilizes the smooth function \code{\link[mgcv]{s}} with a user-defined basis spline
 and "k" parameter. This is akin to \code{gam(y ~ s(x, bs = bs_s, k = K_s) + z, ...)}
 where y is an outcome variable, x is a predictor variable of interest, and z
 is a covariate. If an outcome variable is binary, a logistic GAM is run.
 
 In the case of a continuous interacting variable (i.e., \code{ixterm}), this
-function utilizes \code{\link[mgcv](ti)} for univariate tensor product
+function utilizes \code{\link[mgcv]{ti}} for univariate tensor product
 interaction terms for both the predictor of interest and interaction term
 (similar to main effects in a linear model with a multiplicative interaction
 term), as well as a bivariate tensor product interaction for those two variables.
@@ -182,10 +182,10 @@ first model is structured as \code{gam(y ~ s(x, bs = bs_s, k = K_s, by = iota)
 ordered(iota)) + s(x, bs = bs_s, k = K_s) + iota + z)}. From the first model
 we are able to obtain the factor level-specific curves, and from the second
 model we can obtain curves of the differences between those level-specific
-curves. Note that theoretically the curve for the referent level produced by
+curves. Note that the curve for the referent level produced by
 the second term "s(x)" in the second model should theoretically be equivalent
 to the referent level curve produced by the first term in the first model, but
-in practice they tend to have minuscule difference in EDF, exact fitted curve
+in practice they tend to have minuscule differences in EDF, exact fitted curve
 values, etc., but it's close enough I find it convenient to grab terms from
 these two models as if they were equivalent. Further explanation of both models can
 be found at
@@ -210,7 +210,7 @@ gamdat1$y2 <- gamdat1$yhat2 + rnorm(500)
 gamres1 <- GAMResults(prednames = c("X1", "X2"), outnames = c("y1", "y2"), 
                       covnames = "Z", Data = gamdat1)
 
-gridPrint(grobs = gamres1$Plots, ncol = 2)
+mgcViz::gridPrint(grobs = gamres1$Plots, ncol = 2)
 
 # This next example involves a factor-smooth interaction
 
@@ -225,6 +225,6 @@ gamdat2$y <- gamdat2$yhat + rnorm(500)
 
 gamres2 <- GAMResults("X", "y", "Z", gamdat2, ixterm = "S")
 
-gridPrint(grobs = gamres2$Plots$`y~X`)
+mgcViz::gridPrint(grobs = gamres2$Plots$`y~X`)
 
 }

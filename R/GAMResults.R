@@ -58,7 +58,7 @@
 #' EDF=9) when there is a single term in the smooth (e.g., \code{s(X1)}) and 
 #' \code{bs="tp"}. For your information, the default \code{k} when using 
 #' two-term smooths (e.g., \code{s(X1, X2)}) for \code{\link[mgcv]{s}} when 
-#' \code{bs="tp"} is 30 and for >=3-term smooths this is 110 (see ?tprs). 
+#' \code{bs="tp"} is 30 and for >=3-term smooths this is 110 (see \code{?tprs}). 
 #' Note that increasing this value increases the subspace of functions (can be 
 #' thought of as a ceiling on possible EDF values), and therefore higher 
 #' \code{K} values can lead to higher EDF (see \code{?choose.k}).
@@ -100,13 +100,13 @@
 #' @details
 #' \code{GAMResults} bases its models on the assumption that there will be only 
 #' one univariate smooth term in each model for the predictor of interest and that
-#' utilizes the smooth function \code{\link[mgcv](s)} with a user-defined basis spline
+#' utilizes the smooth function \code{\link[mgcv]{s}} with a user-defined basis spline
 #' and "k" parameter. This is akin to \code{gam(y ~ s(x, bs = bs_s, k = K_s) + z, ...)} 
 #' where y is an outcome variable, x is a predictor variable of interest, and z 
 #' is a covariate. If an outcome variable is binary, a logistic GAM is run. 
 #' 
 #' In the case of a continuous interacting variable (i.e., \code{ixterm}), this 
-#' function utilizes \code{\link[mgcv](ti)} for univariate tensor product 
+#' function utilizes \code{\link[mgcv]{ti}} for univariate tensor product 
 #' interaction terms for both the predictor of interest and interaction term 
 #' (similar to main effects in a linear model with a multiplicative interaction 
 #' term), as well as a bivariate tensor product interaction for those two variables. 
@@ -124,10 +124,10 @@
 #' ordered(iota)) + s(x, bs = bs_s, k = K_s) + iota + z)}. From the first model
 #' we are able to obtain the factor level-specific curves, and from the second
 #' model we can obtain curves of the differences between those level-specific 
-#' curves. Note that theoretically the curve for the referent level produced by 
+#' curves. Note that the curve for the referent level produced by 
 #' the second term "s(x)" in the second model should theoretically be equivalent
 #' to the referent level curve produced by the first term in the first model, but 
-#' in practice they tend to have minuscule difference in EDF, exact fitted curve 
+#' in practice they tend to have minuscule differences in EDF, exact fitted curve 
 #' values, etc., but it's close enough I find it convenient to grab terms from
 #' these two models as if they were equivalent. Further explanation of both models can 
 #' be found at 
@@ -166,7 +166,7 @@
 #' gamres1 <- GAMResults(prednames = c("X1", "X2"), outnames = c("y1", "y2"), 
 #'                       covnames = "Z", Data = gamdat1)
 #' 
-#' gridPrint(grobs = gamres1$Plots, ncol = 2)
+#' mgcViz::gridPrint(grobs = gamres1$Plots, ncol = 2)
 #' 
 #' # This next example involves a factor-smooth interaction
 #' 
@@ -181,7 +181,7 @@
 #' 
 #' gamres2 <- GAMResults("X", "y", "Z", gamdat2, ixterm = "S")
 #' 
-#' gridPrint(grobs = gamres2$Plots$`y~X`)
+#' mgcViz::gridPrint(grobs = gamres2$Plots$`y~X`)
 #' 
 
 
@@ -212,7 +212,7 @@ GAMResults <- function(prednames, outnames, covnames = NULL, Data, logout = F,
   }
   
   lmlist<-list()
-  if(!is.null(ixterm)&&class(Data[,ixterm])=="factor"){
+  if(!is.null(ixterm)&class(Data[,ixterm])=="factor"){
     lmlist2<-list()
   }
   
@@ -338,7 +338,7 @@ GAMResults <- function(prednames, outnames, covnames = NULL, Data, logout = F,
           ccDat<-ccDat[-which(ccDat[,prednames[j]]<quantile(ccDat[,prednames[j]],trimperc/100)|
                               ccDat[,prednames[j]]>quantile(ccDat[,prednames[j]],
                                                            1-(trimperc/100))),]
-          if(!is.null(ixterm)&&class(Data[,ixterm])!="factor"){
+          if(!is.null(ixterm)&class(Data[,ixterm])!="factor"){
             Data<-Data[-which(Data[,ixterm]<quantile(Data[,ixterm],trimperc/100,na.rm=T)|
                                 Data[,ixterm]>quantile(Data[,ixterm],
                                                              1-(trimperc/100),na.rm=T)),]
@@ -367,7 +367,7 @@ GAMResults <- function(prednames, outnames, covnames = NULL, Data, logout = F,
         g1<-gam(gamform1,data=Data,select=smooth.select,na.action=na.action,family=binomial)
         g1.nona<-gam(gamform1,data=ccDat,select=smooth.select,na.action=na.action,
                      family=binomial)
-        if(!is.null(ixterm)&&class(Data[,ixterm])=="factor"){
+        if(!is.null(ixterm)&class(Data[,ixterm])=="factor"){
           g2<-gam(gamform2,data=Data,select=smooth.select,na.action=na.action,
                   family=binomial)
           g2.nona<-gam(gamform2,data=ccDat,select=smooth.select,na.action=na.action,
@@ -378,7 +378,7 @@ GAMResults <- function(prednames, outnames, covnames = NULL, Data, logout = F,
         lm1<-lm(form1,data=Data,na.action=na.action)
         g1<-gam(gamform1,data=Data,select=smooth.select,na.action=na.action)
         g1.nona<-gam(gamform1,data=ccDat,select=smooth.select,na.action=na.action)
-        if(!is.null(ixterm)&&class(Data[,ixterm])=="factor"){
+        if(!is.null(ixterm)&class(Data[,ixterm])=="factor"){
           g2<-gam(gamform2,data=Data,select=smooth.select,na.action=na.action)
           g2.nona<-gam(gamform2,data=ccDat,select=smooth.select,na.action=na.action)
           lmlist2[[lmnum]]<-g2.nona
@@ -411,14 +411,14 @@ GAMResults <- function(prednames, outnames, covnames = NULL, Data, logout = F,
         }
       }
       
-      if(!is.null(ixterm)&&class(Data[,ixterm])!="factor"){
+      if(!is.null(ixterm)&class(Data[,ixterm])!="factor"){
         mysumrows<-c(1:3)
       } else {
         mysumrows<-1
       }
-      if(!is.null(ixterm)&&class(Data[,ixterm])=="factor"){
+      if(!is.null(ixterm)&class(Data[,ixterm])=="factor"){
         Resultsmat[rownum,4:9]<-myvalmat
-      } else if(!is.null(ixterm)&&class(Data[,ixterm])!="factor"){
+      } else if(!is.null(ixterm)&class(Data[,ixterm])!="factor"){
         Resultsmat[rownum,4:9]<-cbind(summary(g1)$s.table[mysumrows,c(1,4)],
                                       k.check(g1.nona)[mysumrows,c(1,3:4)],
                                       (summary(g1)$dev.expl*100))
@@ -588,7 +588,7 @@ GAMResults <- function(prednames, outnames, covnames = NULL, Data, logout = F,
     }#end of plot i loop
   }
   
-  if(!is.null(ixterm)&&class(Data[,ixterm])=="factor"){
+  if(!is.null(ixterm)&class(Data[,ixterm])=="factor"){
     names(lmlist2)<-names(lmlist)
     retlist<-list(Resmatout,gg1,lmlist,lmlist2)
     names(retlist)<-c("Matrix","Plots","GAMlist","IxGAMlist")

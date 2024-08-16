@@ -11,7 +11,7 @@ Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
 Imports: 
-    mgcv, mgcViz, dplyr, sandwich, lmtest, ggplot2, caret, splines, emmeans, logistf, mice, SimMultiCorrData, DHARMa, pbapply, cowplot, scales, msm
+    mgcv, mgcViz, dplyr, sandwich, lmtest, ggplot2, caret, splines, emmeans, logistf, mice, SimMultiCorrData, DHARMa, pbapply, cowplot, scales, msm, fastDummies, rcompanion, DT, kableExtra, htmltools
 Suggests: 
     rmarkdown, knitr, testthat (>= 3.0.0)
 VignetteBuilder: knitr
