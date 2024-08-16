@@ -52,7 +52,7 @@ datatable(Dict, caption = "Data Dictionary",
 
 ### Table
 
-```{r conttable,  results = 'asis'}
+```{r conttable}
 summ <- summtable_tt(contvars, Data)
 datatable(summ, caption = "Continuous Covariate Summary Statistics", 
           rownames = F, options = list(pageLength = 10, rowsGroup = list(0), 
