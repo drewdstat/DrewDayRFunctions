@@ -84,10 +84,12 @@ myvarcompsummary_cat_tab <-
       return(summtab)
     }
   } else {
-    #responses <- c(unique(unlist(sapply(as.character(Data[
-    #  complete.cases(Data[, catnames]), catnames]), unique))))
-    #responses <- unique(c(sapply(Data[complete.cases(Data[, catnames]), catnames], unique)))
-    if(allcomplete){
+    if(length(catnames) == 1){
+      responses <- list()
+      if(nmissing) responses[[1]] <- summary(as.factor(Data[
+        which(!is.na(Data[, catnames])), catnames])) else 
+          responses[[1]] <- summary(as.factor(Data[, catnames]))
+    } else if(allcomplete){
       if(nmissing){
         responses <- unique(c(lapply(Data[complete.cases(Data[, catnames]), catnames], 
                                      function(x) summary(as.factor(x)))))
@@ -123,6 +125,8 @@ myvarcompsummary_cat_tab <-
         kable_styling(font_size = fontsize, full_width  =  F) %>%
         pack_rows(index = table(forcats::fct_inorder(summtab[, 1]))) %>%
         column_spec(1, bold = T)
+      
+      if(scroll) K1 <- K1 %>% scroll_box(width = scrollwidth, height = scrollheight)
       print(K1)
     } else {
       return(summtab)
