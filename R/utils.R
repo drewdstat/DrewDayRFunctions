@@ -473,7 +473,7 @@ subset_bplot <- function(grepname = NULL, Data, compvar = "Trimester", compname 
     names(subData_longer)[1] <- "Comparison"
     
     for(i in levels(subData_long$variable)){
-      myarg <- length(which(is.na(subData_long[subData_long$variable == i, "value"]) == T))> = 
+      myarg <- length(which(is.na(subData_long[subData_long$variable == i, "value"]) == T)) >= 
         min(unlist(summary(as.factor(Data[!is.na(Data[, compvar]), compvar]))))
       if(myarg == TRUE){
         subData_long[subData_long$variable == i, "value"] <- NA
