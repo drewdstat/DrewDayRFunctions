@@ -22,10 +22,10 @@ myvarcompsummary_cat_tab <-
       responses <- lapply(Data[, catnames], 
                         function(x) dimnames(table(x, Data[, compvar]))[[1]])
     }
-    if(any(sapply(responses, length)! = 2)){
+    if(any(sapply(responses, length)!= 2)){
       newmat <- fastDummies::dummy_cols(Data[, c(catnames, compvar)], 
-                                      select_columns = catnames[which(sapply(responses, length)! = 2)], 
-                                      ignore_na = T)[, -which(sapply(responses, length)! = 2)] 
+                                      select_columns = catnames[which(sapply(responses, length)!= 2)], 
+                                      ignore_na = T)[, -which(sapply(responses, length)!= 2)] 
     } else {
       newmat <- Data[, c(catnames, compvar)]
     }
@@ -223,15 +223,15 @@ summtable_tt <- function(vars, Data, varnames = NULL, LODvars = NULL, compvar = 
         if(nlevels>2){
           if(nonpar){
             tt <- tryCatch(wilcox.test(Data[which(Data[, compvar] =  = levels(Data[, compvar])[j]), vars[i]], 
-                                Data[which(Data[, compvar]! = levels(Data[, compvar])[j]), vars[i]]), 
+                                Data[which(Data[, compvar]!= levels(Data[, compvar])[j]), vars[i]]), 
                          error = function(e) NULL)
             if(is.null(tt)) ttp <- NA else ttp <- tt$p.value
           } else if(perm){
             ttp <- perm.ttest(Data[which(Data[, compvar] =  = levels(Data[, compvar])[j]), vars[i]], 
-                           Data[which(Data[, compvar]! = levels(Data[, compvar])[j]), vars[i]])
+                           Data[which(Data[, compvar]!= levels(Data[, compvar])[j]), vars[i]])
           } else {
             tt <- tryCatch(t.test(Data[which(Data[, compvar] =  = levels(Data[, compvar])[j]), vars[i]], 
-                                Data[which(Data[, compvar]! = levels(Data[, compvar])[j]), vars[i]]), 
+                                Data[which(Data[, compvar]!= levels(Data[, compvar])[j]), vars[i]]), 
                          error = function(e) NULL)
             if(is.null(tt)) ttp <- NA else ttp <- tt$p.value
           }
@@ -264,9 +264,9 @@ summtable_tt <- function(vars, Data, varnames = NULL, LODvars = NULL, compvar = 
         pagg$padj <- stats::p.adjust(pagg[, ncol(pagg)], method = padjmethod)
         summtable <- merge(summtable, pagg[, c(1, ncol(pagg))], by = "Variable", all.x = T)
       } else {
-        pagg <- summtable[, c(1:2, ncol(summtable))]#which(summtable$Group! = "Total")
-        pagg[which(pagg$Group! = "Total"), "padj"] <- 
-          stats::p.adjust(pagg[which(pagg$Group! = "Total"), grep("p-value", names(pagg))], method = padjmethod)
+        pagg <- summtable[, c(1:2, ncol(summtable))]#which(summtable$Group!= "Total")
+        pagg[which(pagg$Group!= "Total"), "padj"] <- 
+          stats::p.adjust(pagg[which(pagg$Group!= "Total"), grep("p-value", names(pagg))], method = padjmethod)
         pagg[which(pagg$Group =  = "Total"), "padj"] <- 
           stats::p.adjust(pagg[which(pagg$Group =  = "Total"), grep("p-value", names(pagg))], method = padjmethod)
         summtable <- merge(summtable, pagg[, c(1:2, ncol(pagg))], by = c("Variable", "Group"), all.x = T)
