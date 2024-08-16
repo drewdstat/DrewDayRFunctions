@@ -43,7 +43,7 @@ datatable(Dict, caption = "Data Dictionary",
           rownames = F, options = list(pageLength = 10, rowsGroup = list(0), 
                                   initComplete  =  htmlwidgets::JS(
           "function(settings,  json) {", 
-          "$(this.api().table().header()).css({'font-size': '12px'});", "}"))) %>%
+          "$(this.api().table().header()).css({'font-size': '12px'});", "}")))%>%
   formatStyle(columns = colnames(Dict), fontSize = '12px')
 
 ```
@@ -81,9 +81,10 @@ cowplot::plot_grid(plotlist = bplist, ncol = 5, align = "hv")
 
 ## Categorical Summary Statistics
 
-```{r cattable, results = 'asis'}
-htmltools::div(style = 'height:800px; overflow-y: scroll', 
-    myvarcompsummary_cat_tab(catvars, Data, kable = T, fontsize = 11))
+```{r cattable}
+myvarcompsummary_cat_tab(catvars, Data, kable = T, fontsize = 11, scroll = T, 
+                         scrollwidth = "100%", scrollheight = "200px")
+
 ```
 
 ## End of Document
