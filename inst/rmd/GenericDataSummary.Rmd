@@ -54,12 +54,13 @@ datatable(Dict, caption = "Data Dictionary",
 
 ```{r conttable}
 summ <- summtable_tt(contvars, Data)
-datatable(summ, caption = "Continuous Covariate Summary Statistics", 
+summ2 <- data.frame(Variable = contvars, Mean = colMeans(Data[, contvars), SD = sapply(as.data.frame(Data[, contvars]), sd)
+datatable(summ2, caption = "Continuous Covariate Summary Statistics", 
           rownames = F, options = list(pageLength = 10, rowsGroup = list(0), 
                                   initComplete  =  htmlwidgets::JS(
           "function(settings,  json) {", 
           "$(this.api().table().header()).css({'font-size': '12px'});", "}")))%>%
-  formatStyle(columns = colnames(summ), fontSize = '12px')
+  formatStyle(columns = colnames(summ2), fontSize = '12px')
 
 ```
 
