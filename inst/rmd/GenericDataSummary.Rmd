@@ -27,25 +27,25 @@ howhigh <- 5 + (((length(contvars) - 5)/5) * 3)
 
 knitr::opts_chunk$set(echo = F, warning = T, message = F, fig.align = "center", 
                       fig.width = 10, fig.height = howhigh)
-
+if(is.null(Dict)) dictlogic <- F else dictlogic <- T
 ```
 
 ## Introduction
 
 This document outputs crude summary statistics separately for the continuous and categorical variables in a Data frame being sent out for analysis. As an html document, you can manipulate objects in the document by clicking through pages of tables and by clicking the column names of any table, which will sort the values in that column from low to high value (one click) or high to low value (two clicks). Please also note that search bar at the top right of tables, in which you can type strings to search the entire table.
 
+```{dictdesc, eval = dictlogic}
 ## Data Dictionary
 
-Search through this table for column definitions.
-
-```{r dicttable}
-datatable(Dict, caption = "Data Dictionary", 
+The table below is a data dictionary containing column definitions.
+```
+```{r dicttable, eval = dictlogic}
+DT::datatable(Dict, caption = "Data Dictionary", 
           rownames = F, options = list(pageLength = 10, rowsGroup = list(0), 
                                   initComplete  =  htmlwidgets::JS(
           "function(settings,  json) {", 
           "$(this.api().table().header()).css({'font-size': '12px'});", "}")))%>%
   formatStyle(columns = colnames(Dict), fontSize = '12px')
-
 ```
 
 ## Continuous Summary Statistics {.tabset}
@@ -54,15 +54,13 @@ datatable(Dict, caption = "Data Dictionary",
 
 ```{r conttable}
 summ <- summtable_tt(contvars, Data)
-summ2 <- data.frame(Variable = contvars, Mean = colMeans(as.data.frame(Data[, contvars])), SD = sapply(as.data.frame(Data[, contvars]), sd))
-datatable(summ2, caption = "Continuous Covariate Summary Statistics", 
+DT::datatable(summ, caption = "Continuous Covariate Summary Statistics", 
           rownames = F, options = list(pageLength = 10, rowsGroup = list(0), 
                                   initComplete  =  htmlwidgets::JS(
           "function(settings,  json) {", 
           "$(this.api().table().header()).css({'font-size': '12px'});", "}")))%>%
-  formatStyle(columns = colnames(summ2), fontSize = '12px')
-kable(summ)
-kable(summ2)
+  formatStyle(columns = colnames(summ), fontSize = '12px')
+DT::datatable(summ)
 ```
 
 ### Boxplots
