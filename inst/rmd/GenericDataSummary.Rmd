@@ -61,7 +61,8 @@ datatable(summ2, caption = "Continuous Covariate Summary Statistics",
           "function(settings,  json) {", 
           "$(this.api().table().header()).css({'font-size': '12px'});", "}")))%>%
   formatStyle(columns = colnames(summ2), fontSize = '12px')
-
+kable(summ)
+kable(summ2)
 ```
 
 ### Boxplots
