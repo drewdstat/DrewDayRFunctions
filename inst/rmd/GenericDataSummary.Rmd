@@ -54,7 +54,7 @@ datatable(Dict, caption = "Data Dictionary",
 
 ```{r conttable}
 summ <- summtable_tt(contvars, Data)
-summ2 <- data.frame(Variable = contvars, Mean = colMeans(Data[, contvars]), SD = sapply(as.data.frame(Data[, contvars]), sd))
+summ2 <- data.frame(Variable = contvars, Mean = colMeans(as.data.frame(Data[, contvars])), SD = sapply(as.data.frame(Data[, contvars]), sd))
 datatable(summ2, caption = "Continuous Covariate Summary Statistics", 
           rownames = F, options = list(pageLength = 10, rowsGroup = list(0), 
                                   initComplete  =  htmlwidgets::JS(
