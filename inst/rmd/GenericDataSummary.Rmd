@@ -34,10 +34,10 @@ if(is.null(Dict)) dictlogic <- F else dictlogic <- T
 
 This document outputs crude summary statistics separately for the continuous and categorical variables in a Data frame being sent out for analysis. As an html document, you can manipulate objects in the document by clicking through pages of tables and by clicking the column names of any table, which will sort the values in that column from low to high value (one click) or high to low value (two clicks). Please also note that search bar at the top right of tables, in which you can type strings to search the entire table.
 
-```{block, eval = dictlogic}
-## Data Dictionary
+```{r dictdesc, eval = dictlogic, results = 'asis'}
+cat("## Data Dictionary
 
-The table below is a data dictionary containing column definitions.
+The table below is a data dictionary containing column definitions.")
 ```
 ```{r dicttable, eval = dictlogic}
 DT::datatable(Dict, caption = "Data Dictionary", 
@@ -60,7 +60,6 @@ DT::datatable(summ, caption = "Continuous Covariate Summary Statistics",
           "function(settings,  json) {", 
           "$(this.api().table().header()).css({'font-size': '12px'});", "}")))%>%
   formatStyle(columns = colnames(summ), fontSize = '12px')
-DT::datatable(summ)
 ```
 
 ### Boxplots
@@ -81,10 +80,29 @@ cowplot::plot_grid(plotlist = bplist, ncol = 5, align = "hv")
 
 ## Categorical Summary Statistics
 
-```{r cattable, results = 'asis'}
-myvarcompsummary_cat_tab(catvars, Data, kable = T, fontsize = 11, scroll = T, 
-                         scrollwidth = "100%", scrollheight = "400px")
+```{r cattable}
+cattab <- myvarcompsummary_cat_tab(catvars, Data, kable = F)
+js <- '
+function(data, type, row, meta) {
+  return $("<div></div>", {
+    class: "bar-chart-bar"
+  })
+    .append(
+      $("<div></div>", {
+        class: "bar"
+      }).css({
+        width: (10*data) + "%"
+      })
+    )
+    .prop("outerHTML");
+}
+'
+cattab$Percentage <- gsub(".*\\(", "", cattab[, 3])
+cattab$Percentage <- as.numeric(gsub("\\%.*", "", cattab$Percentage))
 
+DT::datatable(cattab, rownames = F, options = list(
+  columnDefs = list(list(targets = 3, render = JS(js))))
+)
 ```
 
 ## End of Document
