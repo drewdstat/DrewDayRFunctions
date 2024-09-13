@@ -12,7 +12,6 @@ params:
 library(dplyr)
 library(ggplot2)
 library(DT)
-library(kableExtra)
 
 contvars<-names(Data)[which(
   sapply(Data,function(x) any(class(x)%in%c("numeric", "integer", "Date", 
@@ -23,16 +22,41 @@ catvars<-names(Data)[which(
   sapply(Data,function(x) any(class(x) %in% c("character", "factor")))
 )]
 
+if(!is.null(idvar) & any(idvar %in% catvars)) 
+  catvars <- catvars[-which(catvars == idvar)]
+
 howhigh <- 5 + (((length(contvars) - 5)/5) * 3)
 
 knitr::opts_chunk$set(echo = F, warning = T, message = F, fig.align = "center", 
                       fig.width = 10, fig.height = howhigh)
 if(is.null(Dict)) dictlogic <- F else dictlogic <- T
+if(is.null(idvar)) idlogic <- F else idlogic <- T
 ```
 
 ## Introduction
 
 This document outputs crude summary statistics separately for the continuous and categorical variables in a Data frame being sent out for analysis. As an html document, you can manipulate objects in the document by clicking through pages of tables and by clicking the column names of any table, which will sort the values in that column from low to high value (one click) or high to low value (two clicks). Please also note that search bar at the top right of tables, in which you can type strings to search the entire table.
+
+This data frame contains `r nrow(Data)` rows and `r ncol(Data)` columns, of which `r length(which(sapply(Data, function(x) any(class(x) %in% c("numeric", "Date", "POSIXct", "POSIXlt")))))` are continuous, `r length(which(sapply(Data, is.integer)))` are integers, and `r length(which(sapply(Data, function(x) any(class(x) %in% c("factor", "character")))))` are categorical.
+
+```{r idtable, eval = idlogic, include = F}
+idcounts <- Data %>% count(!!as.name(idvar))
+idsumm <- idcounts %>% count(n, name = "Count") %>% arrange(desc(Count))
+if(nrow(idsumm) == 1) {
+  idsumm$Str <- paste0(idsumm$Count, " IDs have ", idsumm$n, " rows.")
+} else if(nrow(idsumm) == 2) {
+  idsumm$Str <- paste0(idsumm$Count, " IDs have ", idsumm$n, " rows and ")
+  idsumm$Str[2] <- gsub(" rows and ", " rows.", idsumm$Str[2])
+} else {
+  idsumm$Str <- paste0(idsumm$Count, " have ", idsumm$n, " rows, ")
+  idsumm$Str[nrow(idsumm)] <- gsub(" rows, ", " rows.", idsumm$Str[nrow(idsumm)])
+  idsumm$Str[nrow(idsumm)] <- paste0("and ", idsumm$Str[nrow(idsumm)])
+}
+outstr <- paste(idsumm$Str, collapse = '')
+```
+```{r iddesc, eval = idlogic, results = 'asis'}
+cat("There are `r length(unique(Data[, idvar]))` unique IDs in this dataset. `r outstr`.")
+```
 
 ```{r dictdesc, eval = dictlogic, results = 'asis'}
 cat("## Data Dictionary
@@ -115,11 +139,14 @@ function(data, type, row, meta) {
     .prop("outerHTML");
 }
 '
-cattab$Percentage <- gsub(".*\\(", "", cattab[, 3])
-cattab$Percentage <- as.numeric(gsub("\\%.*", "", cattab$Percentage))
+cattab$N <- as.integer(gsub("\\(.*", "", cattab[, 3]))
+cattab$Percent <- gsub(".*\\(", "", cattab[, 3])
+cattab$Percent <- as.numeric(gsub("\\%.*", "", cattab$Percentage))
+cattab <- cattab[, -3]
+cattab[, "Bar Chart"] <- cattab$Percent
 
-DT::datatable(cattab, rownames = F, options = list(
-  columnDefs = list(list(targets = 3, render = JS(js))))
+DT::datatable(cattab, rownames = F, fillContainer = T, options = list(
+  columnDefs = list(list(targets = 5, render = JS(js))))
 )
 ```
 

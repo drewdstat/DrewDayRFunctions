@@ -17,18 +17,21 @@
 #' @param Data A data frame to be summarized.
 #' @param Dict An optional data frame for the data dictionary to be included for 
 #' reference as a table in the Markdown document. This defaults to NULL.
+#' @param idvar An optional single character value indicating the column name of 
+#' a column of IDs in Data. If specified, a short statement on the number of 
+#' unique IDs and counts of rows per ID will be added to the introduction of 
+#' the document. This defaults to NULL.
 #' 
 #' @details
 #' This Markdown document makes use of \link[DT]{datatable} from the DT package 
 #' for the data dictionary and continuous summary statistics table, which can 
-#' be sorted and searched. Categorical variables are printed out in a scrollable 
-#' html table made using the \link[kableExtra]{kable} function from the 
-#' kableExtra package.
+#' be sorted and searched. Categorical variable counts are summarized in a 
+#' datatable with a column showing a bar plot of percentages.
 #' 
 #' @return \code{GenericDataSummary} saves an html document to the specified 
 #' filename and directory.
 #' 
-#' @import kableExtra DT ggplot2 cowplot htmltools knitr rmarkdown dplyr
+#' @import DT ggplot2 cowplot htmltools knitr rmarkdown dplyr
 #' @export GenericDataSummary
 #' 
 #' @examples
@@ -43,7 +46,7 @@
 #' 
 
 GenericDataSummary <- function(filename = NULL, directory = getwd(), 
-                               Data, Dict = NULL){
+                               Data, Dict = NULL, idvar = NULL){
   #QC filename and Data/Dict
   if(is.null(filename)){
     filename <- paste0("DataSummary_", format(Sys.time(), "%Y%m%d_%H%M"), ".html")
@@ -53,13 +56,14 @@ GenericDataSummary <- function(filename = NULL, directory = getwd(),
   if(!is.null(Dict)){
     if(!is.data.frame(Dict)) stop("Dict must be an object of class data.frame")
   }
+  if(!is.null(idvar)) if(!is.character(idvar) | length(idvar) > 1){
+    stop("idvar must be a single character value indicating an ID column name.")
+  }
   
   #grab file path for Rmd
   rmdpath <- system.file("rmd", "GenericDataSummary.Rmd", 
                          package = "DrewDayRFunctions")
   
-  
-  options(kableExtra_view_html=F)
   rmarkdown::render(
     input = rmdpath,
     output_dir = directory,

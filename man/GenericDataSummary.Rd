@@ -4,7 +4,13 @@
 \alias{GenericDataSummary}
 \title{Generate an html R Markdown document briefly summarizing a dataset}
 \usage{
-GenericDataSummary(filename = NULL, directory = getwd(), Data, Dict = NULL)
+GenericDataSummary(
+  filename = NULL,
+  directory = getwd(),
+  Data,
+  Dict = NULL,
+  idvar = NULL
+)
 }
 \arguments{
 \item{filename}{A file name and path for the .html R Markdown document to be
@@ -19,6 +25,11 @@ This defaults to your current working directory.}
 
 \item{Dict}{An optional data frame for the data dictionary to be included for
 reference as a table in the Markdown document. This defaults to NULL.}
+
+\item{idvar}{An optional single character value indicating the column name of
+a column of IDs in Data. If specified, a short statement on the number of
+unique IDs and counts of rows per ID will be added to the introduction of
+the document. This defaults to NULL.}
 }
 \value{
 \code{GenericDataSummary} saves an html document to the specified
@@ -36,9 +47,8 @@ included.
 \details{
 This Markdown document makes use of \link[DT]{datatable} from the DT package
 for the data dictionary and continuous summary statistics table, which can
-be sorted and searched. Categorical variables are printed out in a scrollable
-html table made using the \link[kableExtra]{kable} function from the
-kableExtra package.
+be sorted and searched. Categorical variable counts are summarized in a
+datatable with a column showing a bar plot of percentages.
 }
 \examples{
 # Make a data dictionary for the built-in iris dataset
