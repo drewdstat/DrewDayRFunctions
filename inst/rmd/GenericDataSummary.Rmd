@@ -80,6 +80,24 @@ cowplot::plot_grid(plotlist = bplist, ncol = 5, align = "hv")
 
 ## Categorical Summary Statistics
 
+```{r results='asis'}
+cat("
+<style>
+.bar-chart-bar {
+    background-color: #e8e8e8;
+    display: block;
+    position:relative;
+    width: 100%;
+    height: 20px;
+}
+.bar {
+    background-color: blue;
+    float: left;
+    height: 100%;
+}
+</style>
+")
+```
 ```{r cattable}
 cattab <- myvarcompsummary_cat_tab(catvars, Data, kable = F)
 js <- '
