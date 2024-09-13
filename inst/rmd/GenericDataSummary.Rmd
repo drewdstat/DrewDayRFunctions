@@ -109,7 +109,7 @@ function(data, type, row, meta) {
       $("<div></div>", {
         class: "bar"
       }).css({
-        width: (10*data) + "%"
+        width: (data) + "%"
       })
     )
     .prop("outerHTML");
