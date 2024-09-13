@@ -151,7 +151,7 @@ cattab <- cattab[, -3]
 cattab[, "Bar Chart"] <- cattab$Percent
 
 DT::datatable(cattab, rownames = F, options = list(
-  columnDefs = list(list(targets = 5, render = JS(js))))
+  columnDefs = list(list(targets = 4, render = JS(js))))
 )
 ```
 
