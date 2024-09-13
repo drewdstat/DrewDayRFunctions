@@ -13,6 +13,10 @@ library(dplyr)
 library(ggplot2)
 library(DT)
 
+if(!is.null(idvar) & !any(class(Data[, idvar]) %in% c("character", "factor"))){
+  Data[, idvar] <- as.character(Data[, idvar])
+}
+
 contvars<-names(Data)[which(
   sapply(Data,function(x) any(class(x)%in%c("numeric", "integer", "Date", 
                                             "POSIXct", "POSIXlt")))
@@ -55,7 +59,8 @@ if(nrow(idsumm) == 1) {
 outstr <- paste(idsumm$Str, collapse = '')
 ```
 ```{r iddesc, eval = idlogic, results = 'asis'}
-cat("There are `r length(unique(Data[, idvar]))` unique IDs in this dataset. `r outstr`.")
+cat(paste0("There are ", length(unique(Data[, idvar])), 
+           " unique IDs in this dataset. ", outstr))
 ```
 
 ```{r dictdesc, eval = dictlogic, results = 'asis'}
