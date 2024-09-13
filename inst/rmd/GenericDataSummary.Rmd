@@ -141,7 +141,7 @@ function(data, type, row, meta) {
 '
 cattab$N <- as.integer(gsub("\\(.*", "", cattab[, 3]))
 cattab$Percent <- gsub(".*\\(", "", cattab[, 3])
-cattab$Percent <- as.numeric(gsub("\\%.*", "", cattab$Percentage))
+cattab$Percent <- as.numeric(gsub("\\%.*", "", cattab$Percent))
 cattab <- cattab[, -3]
 cattab[, "Bar Chart"] <- cattab$Percent
 
