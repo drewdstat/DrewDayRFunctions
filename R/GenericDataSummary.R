@@ -2,11 +2,11 @@
 #' 
 #' \code{GenericDataSummary} creates a Markdown document for any dataset that 
 #' separately summarizes continuous variables in that dataset with a summary 
-#' table and boxplots and provides frequency counts for all categorical data. 
-#' There is also an option to include a data dictionary table in this simple 
-#' summary document. Uses for this function include quickly inspecting a 
-#' dataset for aberrant values and getting a sense for which variables are 
-#' included.
+#' table, boxplots, and histograms, as well as provides frequency counts for 
+#' all categorical data. There is also an option to include a data dictionary 
+#' table in this simple summary document. Uses for this function include 
+#' quickly inspecting a dataset for aberrant values and getting a sense for 
+#' which variables are included.
 #' 
 #' @param filename A file name and path for the .html R Markdown document to be 
 #' generated. Defaults to "DataSummary_X.html" where X is the system date and 
@@ -24,9 +24,10 @@
 #' 
 #' @details
 #' This Markdown document makes use of \link[DT]{datatable} from the DT package 
-#' for the data dictionary and continuous summary statistics table, which can 
-#' be sorted and searched. Categorical variable counts are summarized in a 
-#' datatable with a column showing a bar plot of percentages.
+#' for the data dictionary and summary statistics tables, which can be 
+#' sorted and searched. Categorical variable counts are summarized in a 
+#' datatable with a column showing percentages with a bar plot in the 
+#' background.
 #' 
 #' @return \code{GenericDataSummary} saves an html document to the specified 
 #' filename and directory.
