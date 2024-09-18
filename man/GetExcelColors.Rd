@@ -4,9 +4,10 @@
 \alias{GetExcelColors}
 \title{\code{GetExcelColors} is a function for reading an xlsx file and generating
 a data frame with all the column names preserved but the contents of the
-columns replaced with hexidecimal color codes for the background colors in
-the Excel files. The function utilizes \code{\link[readxl]{read_xlsx}} to
-read in the Excel file and passes arguments to that function. Then it uses
+columns replaced with Excel color codes for the background colors in
+the Excel files. Additional output includes a data frame and heatmap plot
+showing the counts of cells with each color. The function utilizes
+\code{\link[readxl]{read_xlsx}} to read in the Excel file, and then it uses
 \code{\link[tidyxl]{xlsx_formats}} to get the formatting for the cells.}
 \usage{
 GetExcelColors(filepath, sheet = 1, skip = 0, skiprows = NULL)
@@ -31,18 +32,30 @@ defined in the \code{skip} argument.}
 \value{
 \code{GetExcelColors} returns a list of the following:
 \item{ColorData}{A data frame containing column names
-and background Excel colors. NA values indicate that no background was present
-in those cells. This object is of class "data.frame".}
-\item{UniqueColors}{This is a vector of the unique hexadecimal colors in
-the dataset.}
+and background Excel colors. NA values indicate that no background was
+present in those cells. This object is of class "data.frame".}
+\item{CellCounts}{This is a data frame listing out the unique colors detected
+in the spreadsheet and how many cells have those colors, organized in
+descending order by count.}
+\item{CountPlot}{This plots the counts of cells with each color in a heatmap
+that is colored by the Excel colors present in the spreadsheet. This figure
+is a useful way of seeing what the colors look like and how frequent they
+are.}
 }
 \description{
 \code{GetExcelColors} is a function for reading an xlsx file and generating
 a data frame with all the column names preserved but the contents of the
-columns replaced with hexidecimal color codes for the background colors in
-the Excel files. The function utilizes \code{\link[readxl]{read_xlsx}} to
-read in the Excel file and passes arguments to that function. Then it uses
+columns replaced with Excel color codes for the background colors in
+the Excel files. Additional output includes a data frame and heatmap plot
+showing the counts of cells with each color. The function utilizes
+\code{\link[readxl]{read_xlsx}} to read in the Excel file, and then it uses
 \code{\link[tidyxl]{xlsx_formats}} to get the formatting for the cells.
+}
+\details{
+Note that the color codes exported by Excel do not directly correspond to the
+hexademical color codes utilized by html, R, and other languages. To convert
+the 8-character Excel color codes to hexadecimal color codes, simply replace
+the leading 2 "FF" characters with "#".
 }
 \examples{
 
