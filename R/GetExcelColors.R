@@ -1,9 +1,10 @@
 #' \code{GetExcelColors} is a function for reading an xlsx file and generating
 #' a data frame with all the column names preserved but the contents of the 
-#' columns replaced with hexidecimal color codes for the background colors in
-#' the Excel files. The function utilizes \code{\link[readxl]{read_xlsx}} to 
-#' read in the Excel file and passes arguments to that function. Then it uses
-#' \code{\link[tidyxl]{xlsx_formats}} to get the formatting for the cells.
+#' columns replaced with Excel color codes for the background colors in
+#' the Excel files. Additional output includes a data frame and heatmap plot 
+#' showing the counts of cells with each color. The function utilizes 
+#' \code{\link[readxl]{read_xlsx}} to read in the Excel file, and then it uses
+#' \code{\link[tidyxl]{xlsx_formats}} to get the formatting for the cells. 
 #' 
 #' @param filepath This is a "X.xlsx" file path pointing to an Excel .xlsx file.
 #' @param sheet This is either the integer index or name of an Excel sheet to 
@@ -20,12 +21,23 @@
 #' 
 #' @return \code{GetExcelColors} returns a list of the following:
 #' \item{ColorData}{A data frame containing column names
-#' and background Excel colors. NA values indicate that no background was present
-#' in those cells. This object is of class "data.frame".}
-#' \item{UniqueColors}{This is a vector of the unique hexadecimal colors in 
-#' the dataset.}
+#' and background Excel colors. NA values indicate that no background was 
+#' present in those cells. This object is of class "data.frame".}
+#' \item{CellCounts}{This is a data frame listing out the unique colors detected
+#' in the spreadsheet and how many cells have those colors, organized in 
+#' descending order by count.}
+#' \item{CountPlot}{This plots the counts of cells with each color in a heatmap 
+#' that is colored by the Excel colors present in the spreadsheet. This figure 
+#' is a useful way of seeing what the colors look like and how frequent they 
+#' are.}
 #' 
-#' @import tidyxl readxl
+#' @details
+#' Note that the color codes exported by Excel do not directly correspond to the 
+#' hexademical color codes utilized by html, R, and other languages. To convert 
+#' the 8-character Excel color codes to hexadecimal color codes, simply replace 
+#' the leading 2 "FF" characters with "#". 
+#' 
+#' @import ggplot2 tidyxl readxl
 #' @export GetExcelColors
 #' 
 #' @examples 
@@ -56,5 +68,22 @@ GetExcelColors <- function(filepath, sheet = 1, skip = 0, skiprows = NULL){
   if(!is.null(skiprows)) fills <- fills[which(!fills$row %in% (skiprows - 1)), ]
   fills <- fills %>% select(-row)
   names(fills) <- names(Data)
-  return(list(ColorData = as.data.frame(fills), UniqueColors = unique(fill_colors)))
+  clrsumm <- summary(as.factor(unlist(fills, use.names = F)))
+  if("NA's" %in% names(clrsumm)) clrsumm <- 
+    clrsumm[-grep("NA's", names(clrsumm), fixed = T)]
+  clrsumm <- data.frame(Color = names(clrsumm), Count = clrsumm)
+  clrsumm <- clrsumm[with(clrsumm, order(-Count)), ]
+  row.names(clrsumm) <- NULL
+  plotdat <- clrsumm
+  hexclr <- paste0("#", substr(plotdat$Color, 3, 8))
+  names(hexclr) <- plotdat$Color
+  plotdat$Color <- factor(plotdat$Color, levels = rev(plotdat$Color))
+  gg1 <- ggplot(plotdat, aes(x = 1, y = Color)) + theme_minimal() + 
+    geom_tile(aes(fill = Color)) + 
+    geom_text(aes(label = Count)) + 
+    scale_fill_manual(values = hexclr) + 
+    theme(axis.text.x = element_blank(), axis.title.x = element_blank(), 
+          axis.ticks.x = element_blank(), legend.position = "none")
+  return(list(ColorData = as.data.frame(fills), CellCounts = clrsumm, 
+              CountPlot = gg1))
 }
