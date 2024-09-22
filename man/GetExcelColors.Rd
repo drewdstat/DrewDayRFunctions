@@ -72,9 +72,8 @@ showing the counts of cells with each color. The function utilizes
 \code{\link[tidyxl]{xlsx_formats}} to get the formatting for the cells. An
 excellent guide for extracting data from Excel spreadsheets from R is
 provided in
-\href{https://nacnudus.github.io/spreadsheet-munging-strategies/tidy-formatted-cells.html}
-{this GitHub post by Duncan Garmonsway}, and this function drew heavily from
-Section 2.4.
+\href{https://nacnudus.github.io/spreadsheet-munging-strategies/tidy-formatted-cells.html}{this GitHub post by Duncan Garmonsway},
+and this function drew heavily from Section 2.4.
 }
 \details{
 Note that the row used to grab the column names will also be included as a
