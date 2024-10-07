@@ -9,6 +9,9 @@
 #' \href{https://causal-curve.readthedocs.io/en/latest/intro.html}{causal-curve} 
 #' Python package by Roni Kobrosly. 
 #' 
+#' A separate plotting function is provided as described in 
+#' \code{\link[DrewDayRFunctions]{plot.medcurve}}.
+#' 
 #' @param medmodel This is a mediation model of any class acceptable by the 
 #' \code{\link[mediation]{mediate}} function, namely 'lm', 'polr', 'bayespolr', 
 #' 'glm', 'bayesglm', 'gam', 'rq', 'survreg', or 'merMod'. This model should 
@@ -101,6 +104,8 @@
 #' 
 #' # Mediation with bootstrap CIs
 #' medres <- MediationCurve(medmodel, outmodel, "treat", "med", boot = T)
+#' 
+#' plot(medres)
 #' }
 #' 
 #' @references 
