@@ -104,6 +104,10 @@ continuous treatment. This function is largely inspired by the
 \href{https://causal-curve.readthedocs.io/en/latest/intro.html}{causal-curve}
 Python package by Roni Kobrosly.
 }
+\details{
+A separate plotting function is provided as described in
+\code{\link[DrewDayRFunctions]{plot.medcurve}}.
+}
 \examples{
 # Linear treatment -> outcome association, nonlinear treatment -> mediator 
 #  and mediator -> outcome association
@@ -125,6 +129,8 @@ outmodel <- mgcv::gam(out ~ treat + s(med), data = meddata)
 
 # Mediation with bootstrap CIs
 medres <- MediationCurve(medmodel, outmodel, "treat", "med", boot = T)
+
+plot(medres)
 }
 
 }
