@@ -158,6 +158,11 @@ for the \code{df} parameter in \code{\link[lmtest]{coefci}}.}
 \item{HCtype}{This is the formula used for the \code{\link[sandwich]{vcovHC}}
 function calculation of robust CIs and p-values. Defaults to \code{"HC0"}.}
 
+\item{predspline}{If \code{TRUE}, this transforms each predictor of interest
+into a natural spline term using \code{\link[splines]{ns}} from the '
+splines' package. A coefficient for each degree of freedom is returned.
+Defaults to \code{FALSE}.}
+
 \item{predsplinedf}{This specifies the number of degrees of freedom for the
 predictor variable natural splines if \code{predspline} is \code{TRUE}.
 Defaults to 3.}
@@ -253,11 +258,6 @@ predictor, outcome, and covariate variables that have missing values.}
 
 \item{miceiter}{The number of multiple imputations to perform if \code{mice}
 is set to \code{TRUE}. Defaults to 10.}
-
-\item{predspline:}{If \code{TRUE}, this transforms each predictor of interest
-into a natural spline term using \code{\link[splines]{ns}} from the '
-splines' package. A coefficient for each degree of freedom is returned.
-Defaults to \code{FALSE}.}
 }
 \value{
 \code{GLMResults} returns a list of:
@@ -303,15 +303,23 @@ carcovars <- c("am", "vs", "gear")
 
 lmres <- GLMResults(prednames = carpreds, outnames = carouts, 
                    covnames = carcovars, Data = mtcars, robust = F)
+View(lmres$Matrix)
+lmres$GGplot
 
 # Probit regression with an interaction term on the predictor of interest and
-#  on the covariate "gear" while also using robust errors (the default)
+#  on the covariate "gear" while also using robust errors (the default).
 
-glmres <- GLMResults(carpreds, c("vs", "am"), c("gear", "carb"), mtcars, 
-                     ixterm = "qsec", covix = "gear", binomlink = "probit", 
-                     altprednames = c("Displacement", "Cylinders", "Axle Ratio", 
-                     "Weight"), altoutnames = c("Engine Type", "Transmission Type"), 
-                     altixname = "Quarter Mile Time")
+data("infert")
+infert$anyspont <- ifelse(infert$spontaneous > 0, 1, 0)
+glmres <- GLMResults(c("induced", "age"), c("case", "anyspont"), c("education"), infert, 
+                     ixterm = "parity", covix = "education", binomlink = "probit", 
+                     altprednames = c("Education", "Age"), 
+                     altoutnames = c("Infertile", "Spontaneous"), 
+                     altixname = "Parity", extradiag = T)
+# Visualize continuous * continuous interaction
+interact.plot <- InteractionCoefPlot(glmres$LMlist$`anyspont~induced`, infert, 
+"induced", "parity", addpvallab = T, shadebysig = T)
+interact.plot$GGplot
 
 # Robust Poisson regression
 glmres <- GLMResults(carpreds[-1], c("vs", "am"), c("gear", "carb"), mtcars, 
