@@ -1,3 +1,4 @@
+#Get a character string of all counts and percentages (e.g., "10 (5%)")
 countperc <- function(x, roundplace = 2, na.rm = T){
   if(na.rm) summ <- summary(x[which(!is.na(x))]) else summ <- summary(x)
   perc <- prop.table(summ)
@@ -5,6 +6,9 @@ countperc <- function(x, roundplace = 2, na.rm = T){
   names(summ) <- names(perc)
   return(summ)
 }
+
+#Continuous variable summary statistics with the option of comparing by a 
+# categorical variable with 2 or more levels with t-tests or ANOVAs
 myvarcompsummary_cat_tab <- 
   function(catnames, Data, compvar = NULL, catvarnames = NULL, kable = T, 
            roundplace = 2, fontsize = 12, totalcol = F, nmissing = F, sigtest = T, 
@@ -133,8 +137,13 @@ myvarcompsummary_cat_tab <-
     }
   }
 }
-summtable_tt <- function(vars, Data, varnames = NULL, LODvars = NULL, compvar = NULL, newcomplvls = NULL, 
-                       roundplace = 2, padj = F, padjmethod = "BH", nonpar = F, perm = F, signif = F){
+
+# Continuous variable summary statistics with a t-test or ANOVA if a 
+# categorical comparison variable is provided
+summtable_tt <- function(vars, Data, varnames = NULL, LODvars = NULL, 
+                         compvar = NULL, newcomplvls = NULL, roundplace = 2, 
+                         padj = F, padjmethod = "BH", nonpar = F, perm = F, 
+                         signif = F){
   if(signif){
     roundfunc <- function(x, roundplace){signif(x, roundplace)}
   } else {
@@ -301,6 +310,8 @@ summtable_tt <- function(vars, Data, varnames = NULL, LODvars = NULL, compvar = 
   }
   return(summtable)
 }
+
+#Plot of correlation coefficients
 mypearson <- function(contnames, catnames = NULL, Data = tides_ndphxcc, plot = T, exclude = F, cutoff = 0.4, 
                     corindex = NULL, usemethod = "pearson", plottitle = "", fontsize = 0.6){
   if(!is.null(catnames)){
@@ -340,6 +351,8 @@ mypearson <- function(contnames, catnames = NULL, Data = tides_ndphxcc, plot = T
     }
   }
 }
+
+#Continuous variable summary statistics
 myvarcompsummary <- function(colnames, Data, compvar = NULL, outname = "Score", 
                            compname = "Version", footnote = NULL, kable = T){
   myskew <- function(x){
@@ -437,6 +450,8 @@ myvarcompsummary <- function(colnames, Data, compvar = NULL, outname = "Score",
     return(Outtable)
   }
 }
+
+#Boxplots of variables compared by levels of a categorical variable
 subset_bplot <- function(grepname = NULL, Data, compvar = "Trimester", compname = "Trimester", 
                        comp = T, colnames = NULL, meancolor = "purple", palette = NULL, matchaxes = F, 
                        starvec = NULL){
@@ -606,6 +621,8 @@ subset_bplot <- function(grepname = NULL, Data, compvar = "Trimester", compname 
   
   return(gg1)
 }
+
+#Simple summary output for categorical variables
 myvarcompsummary_cat <- function(catnames, Data, catvarnames = NULL, fontsize = 12, 
                                  omitmissing = F){
   if(is.null(catvarnames)) catvarnames <- catnames
@@ -627,6 +644,8 @@ myvarcompsummary_cat <- function(catnames, Data, catvarnames = NULL, fontsize = 
     print(K1)
   }
 }
+
+#Easy way to get a certain number of quantiles (e.g., 4 for quartiles)
 myquantile <- function(x, q, labelnumbers = T){
   mybreaks <- quantile(x, probs = seq(0, 1, by = 1/q))
   if(labelnumbers){
@@ -636,6 +655,8 @@ myquantile <- function(x, q, labelnumbers = T){
   }
   return(myquants)
 }
+
+#Perform a permutation test form of a Student's t-test
 perm.ttest <- function(x, y = NULL, compvar = NULL, Data, niter = 10000){
   if(!is.null(y)){
     if(is.character(x)){x <- Data[, x]}
@@ -659,3 +680,27 @@ perm.ttest <- function(x, y = NULL, compvar = NULL, Data, niter = 10000){
   permp <- length(which(abs(permdiffs) > abs(origdiff)))/niter
   return(permp)
 }
+
+#Output coefficients and robust standard errors and p-values
+robustse <- function(x, HCtype="HC0",usedf=F) {
+  mod1 <- lmtest::coeftest(x, vcov = function(x) vcovHC(x,type=HCtype))
+  if(!usedf){
+    cis<-lmtest::coefci(x, vcov=function(x) sandwich::vcovHC(x,type=HCtype))
+  } else {
+    cis<-lmtest::coefci(x, vcov = function(x) sandwich::vcovHC(x,type=HCtype),
+                df=x$df.residual)
+  }
+  mod1<-cbind(mod1,cis)
+  return(mod1)
+}
+
+#calculate a t-distribution-based set of confidence intervals
+confint_qt <- function(beta, se, DF, IQR = 1, level = 0.95){
+  ci.lower<-(beta * IQR) - ((se * IQR) * qt(((level/2) + 0.5), DF))
+  ci.upper<-(beta * IQR) + ((se * IQR) * qt(((level/2) + 0.5), DF))
+  CIs<-data.frame(CIL = ci.lower, CIU = ci.upper)
+  return(CIs)
+}
+
+#The combination formula
+nCr <- function(n, r) factorial(n)/(factorial(r) * factorial(n - r))

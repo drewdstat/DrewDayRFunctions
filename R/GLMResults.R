@@ -103,7 +103,7 @@
 #' for the \code{df} parameter in \code{\link[lmtest]{coefci}}.
 #' @param HCtype This is the formula used for the \code{\link[sandwich]{vcovHC}} 
 #' function calculation of robust CIs and p-values. Defaults to \code{"HC0"}.
-#' @param predspline: If \code{TRUE}, this transforms each predictor of interest 
+#' @param predspline If \code{TRUE}, this transforms each predictor of interest 
 #' into a natural spline term using \code{\link[splines]{ns}} from the '
 #' splines' package. A coefficient for each degree of freedom is returned. 
 #' Defaults to \code{FALSE}.
@@ -219,15 +219,23 @@
 #' 
 #' lmres <- GLMResults(prednames = carpreds, outnames = carouts, 
 #'                    covnames = carcovars, Data = mtcars, robust = F)
+#' View(lmres$Matrix)
+#' lmres$GGplot
 #' 
 #' # Probit regression with an interaction term on the predictor of interest and
-#' #  on the covariate "gear" while also using robust errors (the default)
+#' #  on the covariate "gear" while also using robust errors (the default).
 #' 
-#' glmres <- GLMResults(carpreds, c("vs", "am"), c("gear", "carb"), mtcars, 
-#'                      ixterm = "qsec", covix = "gear", binomlink = "probit", 
-#'                      altprednames = c("Displacement", "Cylinders", "Axle Ratio", 
-#'                      "Weight"), altoutnames = c("Engine Type", "Transmission Type"), 
-#'                      altixname = "Quarter Mile Time")
+#' data("infert")
+#' infert$anyspont <- ifelse(infert$spontaneous > 0, 1, 0)
+#' glmres <- GLMResults(c("induced", "age"), c("case", "anyspont"), c("education"), infert, 
+#'                      ixterm = "parity", covix = "education", binomlink = "probit", 
+#'                      altprednames = c("Education", "Age"), 
+#'                      altoutnames = c("Infertile", "Spontaneous"), 
+#'                      altixname = "Parity", extradiag = T)
+#' # Visualize continuous * continuous interaction
+#' interact.plot <- InteractionCoefPlot(glmres$LMlist$`anyspont~induced`, infert, 
+#' "induced", "parity", addpvallab = T, shadebysig = T)
+#' interact.plot$GGplot
 #' 
 #' # Robust Poisson regression
 #' glmres <- GLMResults(carpreds[-1], c("vs", "am"), c("gear", "carb"), mtcars, 
@@ -263,26 +271,15 @@ GLMResults <- function(prednames, outnames, covnames = NULL, Data, logout = F,
                        leverage.meancutoff = NULL, post.power = F, 
                        effect.size = 0.5, nsim = 1E3, mice = F, micevars = NULL, 
                        miceiter = 10){
-  robustse <- function(x, HCtype="HC0",usedf=robustdf) {
-    mod1 <- coeftest(x, vcov = function(x) vcovHC(x,type=HCtype))
-    if(!usedf){
-      cis<-coefci(x, vcov=function(x) vcovHC(x,type=HCtype))
-    } else {
-      cis<-coefci(x, vcov = function(x) vcovHC(x,type=HCtype),
-                  df=x$df.residual)
-    }
-    mod1<-cbind(mod1,cis)
-    return(mod1)
+  
+  if(!is.null(ixterm)){
+    if(predspline) stop(paste0("Code not yet set up to accommodate spline",
+                               " interactions. Please set 'ixterm' to NULL if",
+                               " 'predspline' is TRUE."))
   }
-  confint.qt<-function(beta,se,DF,IQR=1,level=0.95){
-    ci.lower<-(beta*IQR)-((se*IQR)*qt(((level/2)+0.5), DF))
-    ci.upper<-(beta*IQR)+((se*IQR)*qt(((level/2)+0.5), DF))
-    CIs<-data.frame(CIL=ci.lower,CIU=ci.upper)
-    return(CIs)
-  }
-  if(!is.null(ixterm)&predspline){
-    stop(paste0("Code not yet set up to accommodate spline interactions. ",
-                "Please set 'ixterm' to NULL if 'predspline' is TRUE."))
+  if(is.null(ixterm)){
+    if(!is.null(altixname)) altixname <- NULL
+    if(!is.null(covix)) covix <- NULL
   }
 
   if(robust&Firth){
@@ -294,7 +291,8 @@ GLMResults <- function(prednames, outnames, covnames = NULL, Data, logout = F,
                 " objects. Please set 'extradiag' to FALSE if 'Firth' is TRUE."))
   }
 
-  predclasses<-sapply(Data[,prednames],class)
+  if(length(prednames) > 1) predclasses<-sapply(Data[,prednames],class) else 
+    predclasses <- class(Data[, prednames])
   if(any(predclasses=="character")){
     for(cl in which(predclasses=="character")){
       Data[,prednames[cl]]<-as.factor(Data[,prednames[cl]])
@@ -302,7 +300,9 @@ GLMResults <- function(prednames, outnames, covnames = NULL, Data, logout = F,
   }
 
   if(any(predclasses%in%c("factor"))){
-    predlevellengths<-sapply(Data[,prednames],function(x) length(levels(x)))
+    if(length(prednames) > 1) predlevellengths <- 
+        sapply(Data[,prednames],function(x) length(levels(x))) else 
+          predlevellengths <- length(levels(Data[, prednames]))
     predlevelrows<-ifelse(predlevellengths%in%c(0,1),1,predlevellengths-1)
     predrowlength<-sum(predlevelrows)
   } else {
@@ -310,24 +310,47 @@ GLMResults <- function(prednames, outnames, covnames = NULL, Data, logout = F,
     predrowlength<-length(prednames)
   }
 
-  if(is.null(ixterm)&predspline!=F){
-    Resultsmat<-as.data.frame(matrix(NA,predsplinedf*predrowlength*length(outnames),12))
-  } else if(!is.null(ixterm)){
+  if(is.null(ixterm)&predspline){
+    if(!all(class(Data[, prednames]) %in% c("numeric", "integer", "double"))) 
+      stop(paset0("All prednames columns must be of class 'numeric', 'integer',",
+                  " or 'double' if predspline is TRUE."))
+    Resultsmat <- as.data.frame(matrix(
+      NA, predsplinedf * predrowlength * length(outnames), 12))
+  } else if(!is.null(ixterm) & ixpred){
     nixlvl<-length(levels(Data[,ixterm]))
     if(class(Data[,ixterm])%in%c("factor","character")){
-      if(class(Data[,ixterm])=="character"){Data[,ixterm]<-as.factor(Data[,ixterm])}
-      if(is.null(ncol(combn(levels(Data[,ixterm]),2)))) {
-        ixtermlength<-nixlvl+(nixlvl-1)+1
+      if(class(Data[,ixterm])=="character"){Data[,ixterm]<-
+        as.factor(Data[,ixterm])}
+      if(any(predclasses %in% c("factor", "character"))){
+        #ex1: 4 predlevels & 3 ixtermlevels means (p-1), i.e., 3 predrows and
+        # (i-1)+((p-1)*(i-1))
+        allrowlenvec <- sapply(predlevelrows,
+                               function(x) x + (nixlvl-1) + (nCr(nixlvl, 2) * nCr(x, 2)))
+        Resultsmat<-as.data.frame(matrix(
+          NA,sum(allrowlenvec)*length(outnames),12))
       } else {
-        ixtermlength<-nixlvl+(nixlvl-1)+
-          ncol(combn(levels(Data[,ixterm]),2))
+        if(is.null(nCr(levels(Data[,ixterm]),2))) {
+          ixtermlength<-nixlvl+(nixlvl-1)+1
+        } else {
+          ixtermlength<-nixlvl+(nixlvl-1)+
+            ncol(combn(levels(Data[,ixterm]),2))
+        }
+        Resultsmat<-as.data.frame(matrix(
+          NA,length(outnames)*ixtermlength,12))
       }
     } else {
-      ixtermlength<-3
+      if(any(predclasses %in% c("factor", "character"))){
+        
+        ixtermlenvec<-predlevelrows*2+1
+        ixtermlength<-NULL
+        Resultsmat<-as.data.frame(matrix(
+          NA,sum(ixtermlenvec)*length(outnames),12))
+      } else {
+        ixtermlength<-3
+        Resultsmat<-as.data.frame(matrix(
+          NA,ixtermlength*predrowlength*length(outnames),12))
+      }
     }
-
-    Resultsmat<-as.data.frame(matrix(NA,ixtermlength*predrowlength*length(outnames),
-                                     12))
   } else {
     Resultsmat<-as.data.frame(matrix(NA,predrowlength*length(outnames),11))
   }
@@ -358,10 +381,17 @@ GLMResults <- function(prednames, outnames, covnames = NULL, Data, logout = F,
           ((predsplinedf-1)*(j-1))
         rownum<-rowstart:rowend
         lmnum<-(1+(j-1))+((i-1)*length(prednames))
-      } else if(!is.null(ixterm)){
-        rowstart<-(1+(j-1))+((i-1)*ixtermlength*predrowlength)+((ixtermlength-1)*(j-1))
-        rowend<-(ixtermlength+(j-1))+((i-1)*ixtermlength*predrowlength)+ 
-          ((ixtermlength-1)*(j-1))
+      } else if(!is.null(ixterm) & ixpred){
+        if(is.null(ixtermlength)){ #if there are varying row lengths 
+          rowstart<-(1+(j-1))+((i-1)*ixtermlenvec[j])+((ixtermlenvec[j]-1)*(j-1))
+          #*predrowlength
+          rowend<-(ixtermlenvec[j]+(j-1))+((i-1)*ixtermlenvec[j])+ #*predrowlength
+            ((ixtermlenvec[j]-1)*(j-1))
+        } else {
+          rowstart<-(1+(j-1))+((i-1)*ixtermlength*predrowlength)+((ixtermlength-1)*(j-1))
+          rowend<-(ixtermlength+(j-1))+((i-1)*ixtermlength*predrowlength)+ 
+            ((ixtermlength-1)*(j-1))
+        }
         rownum<-rowstart:rowend
         lmnum<-(1+(j-1))+((i-1)*predrowlength) 
       } else if(any(sapply(Data[,prednames],FUN=function(x) class(x)=="factor"))) {
@@ -1029,11 +1059,11 @@ GLMResults <- function(prednames, outnames, covnames = NULL, Data, logout = F,
       if(mice){
         if(logpred2[j]==T){
           IQRBeta<-betalist*log(1+(Mult/100),base=logbasepred)
-          IQRCIs<-confint.qt(betalist,selist,dflist,log(1+(Mult/100),
+          IQRCIs<-confint_qt(betalist,selist,dflist,log(1+(Mult/100),
                                                         base=logbasepred))
         } else {
           IQRBeta<-betalist*Mult
-          IQRCIs<-confint.qt(betalist,selist,dflist,Mult)
+          IQRCIs<-confint_qt(betalist,selist,dflist,Mult)
         }
       } else if(any(class(lm1)=="logistf")|any(class(lm1)=="glm")&robust==F){
         if(Mult!=1){
@@ -1046,11 +1076,11 @@ GLMResults <- function(prednames, outnames, covnames = NULL, Data, logout = F,
       } else {
         if(logpred2[j]==T){
           IQRBeta<-betalist*log(1+(Mult/100),base=logbasepred)
-          IQRCIs<-confint.qt(betalist,selist,summary(lm1)$df[2],
+          IQRCIs<-confint_qt(betalist,selist,summary(lm1)$df[2],
                              log(1+(Mult/100),base=logbasepred))
         } else {
           IQRBeta<-betalist*Mult
-          IQRCIs<-confint.qt(betalist,selist,summary(lm1)$df[2],Mult)
+          IQRCIs<-confint_qt(betalist,selist,summary(lm1)$df[2],Mult)
         }
       }
       

@@ -109,7 +109,10 @@ plot.medcurve <- function(med.results, plot.est = "ACME", addci = T,
   if(addptci) gg1 <- gg1 + geom_errorbar(aes(
     ymin = lci, ymax = uci), width = 1.2)
   if(plotrug){
-    rugdat <- data.frame(treat = outmodel$model[, treatname])
+    if(is.null(rugvalues)) stop(paste0(
+      "If plotrug is TRUE, a vector of treatment values to be rug plotted ",
+      "along the x-axis must be provided as the argument rugvalues."))
+    rugdat <- data.frame(treat = rugvalues)
     gg1 <- gg1 + geom_rug(data = rugdat, aes(x = treat))
   }
   return(gg1)
