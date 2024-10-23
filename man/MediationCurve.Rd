@@ -47,7 +47,11 @@ provided for \code{treatvalues}, those 'grid' arguments are ignored.}
 This will be passed to the \code{length.out} argument in
 \code{\link[base]{seq}}. This defaults to \code{9}.}
 
-\item{gridlowerq}{An upper quantile for the end of the sequence of
+\item{gridlowerq}{A lower quantile for the beginning of the sequence of
+treatment values. This defaults to \code{0.01}, meaning that the first value
+is the 1st percentile of the treatment values.}
+
+\item{gridupperq}{An upper quantile for the end of the sequence of
 treatment values. This defaults to \code{0.99}, meaning that the last value
 is the 99th percentile of the treatment values.}
 
