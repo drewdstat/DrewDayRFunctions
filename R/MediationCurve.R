@@ -107,7 +107,7 @@
 #' # Mediation with bootstrap CIs
 #' medres <- MediationCurve(medmodel, outmodel, "treat", "med", boot = T)
 #' 
-#' plot.medres(medres)
+#' plot.medcurve(medres)
 #' }
 #' 
 #' @references 
