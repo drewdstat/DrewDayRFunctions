@@ -49,7 +49,9 @@
 #' 73.75th, and 97.5th percentiles of the treatment values, which in this case 
 #' would be -1.96, -0.64, 0.00, 0.64, and 1.96. If \code{qgrid = FALSE}, these 
 #' values would instead be evenly spaced between -1.96 and 1.96, so they would 
-#' be -1.96, -0.98, 0, 0.98, 1.96. This defaults to \code{TRUE}.
+#' be -1.96, -0.98, 0, 0.98, 1.96. This defaults to \code{FALSE} because the 
+#' smoothing at the edges of the curve tends to more severely miss the actual 
+#' point estimates when not having an evenly spaced set of values. 
 #' @param progress A logical value as to whether to include a progress bar 
 #' showing the percentage of the mediation functions across the treatment values 
 #' that has been completed so far. This function can take some time to run, so 
@@ -105,7 +107,7 @@
 #' # Mediation with bootstrap CIs
 #' medres <- MediationCurve(medmodel, outmodel, "treat", "med", boot = T)
 #' 
-#' plot(medres)
+#' plot.medres(medres)
 #' }
 #' 
 #' @references 
@@ -119,7 +121,7 @@
 #' 
 MediationCurve <- function(medmodel, outmodel, treatname, medname, 
                            treat_values = NULL, gridlen = 9, gridlowerq = 0.01, 
-                           gridupperq = 0.99, qgrid = T, progress = T, ...){
+                           gridupperq = 0.99, qgrid = F, progress = T, ...){
   rescols <- c("control.value", "treat.value", 
                c(sapply(c("d0", "d1", "z0", "z1", "n0", "n1"), 
                         function(x) paste0(x, c("", ".ci", ".p")))), 
