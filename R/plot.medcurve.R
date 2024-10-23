@@ -86,28 +86,32 @@ plot.medcurve <- function(med.results, plot.est = "ACME", addci = T,
       , c("tau.coef", "tau.ci.2.5", "tau.ci.97.5")]
     plot.est <- "Total Effect"
   }
-  gg1 <- ggplot(plotdat, aes(x = gridmean, y = est)) + theme_bw() +
+  gg1 <- ggplot() + theme_bw() +
     geom_hline(yintercept = 0)
   if(addci){
     if(smoothplot){
-      gg1 <- gg1 + stat_smooth(geom = "ribbon", aes(
-        ymin = predict(loess(lci ~ gridmean)),
-        ymax = predict(loess(uci ~ gridmean))),
+      gg1 <- gg1 + stat_smooth(data = plotdat, aes(
+        x = gridmean, y = est, ymin = predict(loess(lci ~ gridmean)),
+        ymax = predict(loess(uci ~ gridmean))), geom = "ribbon",
         alpha = 0.5, fill = "grey50", show.legend = F)
     } else {
-      gg1 <- gg1 + geom_ribbon(aes(ymin = lci, ymax = uci),
+      gg1 <- gg1 + geom_ribbon(data = plotdat, aes(x = gridmean, y = est,
+                               ymin = lci, ymax = uci),
                                alpha = 0.5, fill = "grey50", show.legend = F)
     }
   }
   if(smoothplot){
-    gg1 <- gg1 + geom_smooth(se = F, formula = 'y ~ x', method = 'loess') 
+    gg1 <- gg1 + geom_smooth(data = plotdat, aes(x = gridmean, y = est), 
+                             se = F, formula = 'y ~ x', method = 'loess') 
   } else {
-    gg1 <- gg1 + geom_smooth(se = F, formula = 'y ~ x', method = 'lm') 
+    gg1 <- gg1 + geom_line(data = plotdat, aes(x = gridmean, y = est), 
+                           linewidth = 1, linetype = 1, color = "#3366FF") 
   }
   gg1 <- gg1 + xlab("Treatment") + ylab(plot.est)
-  if(addpts) gg1 <- gg1 + geom_point(size = 2)
-  if(addptci) gg1 <- gg1 + geom_errorbar(aes(
-    ymin = lci, ymax = uci), width = 1.2)
+  if(addpts) gg1 <- gg1 + geom_point(data = plotdat, 
+                                     aes(x = gridmean, y = est), size = 2)
+  if(addptci) gg1 <- gg1 + geom_errorbar(data = plotdat, aes(
+    x = gridmean, y = est, ymin = lci, ymax = uci))
   if(plotrug){
     if(is.null(rugvalues)) stop(paste0(
       "If plotrug is TRUE, a vector of treatment values to be rug plotted ",
