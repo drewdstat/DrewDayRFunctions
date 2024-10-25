@@ -12,7 +12,9 @@
   addpts = F,
   addptci = F,
   plotrug = F,
-  rugvalues = NULL
+  rugvalues = NULL,
+  xsplineshape = -0.5,
+  smoothci.linetype = "solid"
 )
 }
 \arguments{
@@ -25,28 +27,27 @@ for the average direct effect, \code{"Total"} for the total effect, and
 \code{"Proportion"} for the proportion of the effect mediated (i.e.,
 ACME/Total Effect). This defaults to \code{"ACME"}.}
 
-\item{addci}{This is a logical value specifying whether a ribbon of
-95\% confidence intervals should be wrapped around the plotted curve or line.
+\item{addci}{This is a logical value specifying whether 95\% confidence
+intervals should be wrapped around the mean estimate curve or line.
 This defaults to \code{TRUE}.}
 
 \item{smoothplot}{This is a logical value specifying whether the main line
 and 95\% confidence interval ribbon (if \code{addci = TRUE}) connecting the
-point estimates should be a smoothed loess fit if \code{TRUE} or a series of
-straight lines connecting the point estimates if \code{FALSE}. Note that in
-the case of a few unevenly spaced out values with sharp curves, a smoothed
-fit may not go through all of the point estimates. This defaults to
-\code{TRUE}.}
+point estimates should be a smoothed x-spline fit
+(\code{\link[ggalt]{stat_xspline}}) if \code{TRUE} or a series
+of straight lines connecting the point estimates if \code{FALSE}. The
+x-spline fit forces the curve to go through each observed point. If
+\code{TRUE}, CIs are not filled in as they are if this is \code{FALSE}
+but instead are red curves on either side of the mean blue curve.
+This defaults to \code{TRUE}.}
 
 \item{addpts}{This is a logical value specifying whether to add points for
-the point estimates of the estimate of interest. This can be valuable for
-assessing how much a smoothed fit may be deviating from the actual point
-estimates. This defaults to \code{FALSE}.}
+the point estimates of the estimate of interest. This defaults to
+\code{FALSE}.}
 
 \item{addptci}{This is a logical value specifying whether to add error bars
 for the 95\% confidence intervals of the point estimates of the estimate of
-interest. This can be valuable for assessing how much a smoothed confidence
-interval ribbon fit may be deviating from the actual point estimates. This
-defaults to \code{FALSE}.}
+interest. This defaults to \code{FALSE}.}
 
 \item{plotrug}{This is a logical value specifying whether to add a rug plot
 along the x-axis showing observed treatment values from the data used to
@@ -57,6 +58,14 @@ provided for the argument \code{rugvalues}. This defaults to \code{FALSE}.}
 included in the rug plot if \code{plotrug = TRUE}. This defaults to
 \code{NULL}. If \code{plotrug = TRUE} and \code{rugvalues} is NULL, an error
 will be returned.}
+
+\item{xsplineshape}{This is a value between -1 and 1 controlling the
+smoothing of the x-spline (see \code{\link[ggalt]{stat_xspline}}) smooth.
+The x-spline approximates a Catmull-Rom spline at -1, has sharp corners at 0,
+and approximates a cubic b-spline at 1. This defaults to -0.5.}
+
+\item{smoothci.linetype}{This allows you to adjust the line type of the red
+CI x-splines if \code{smoothplot = TRUE}. This defaults to \code{"solid"}.}
 }
 \value{
 \code{plot.medcurve} returns the specified plot of the class
