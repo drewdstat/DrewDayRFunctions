@@ -95,17 +95,17 @@ myvarcompsummary_cat_tab <-
           responses[[1]] <- summary(as.factor(Data[, catnames]))
     } else if(allcomplete){
       if(nmissing){
-        responses <- unique(c(lapply(Data[complete.cases(Data[, catnames]), catnames], 
-                                     function(x) summary(as.factor(x)))))
+        responses <- c(lapply(Data[complete.cases(Data[, catnames]), catnames], 
+                                     function(x) summary(as.factor(x))))
       } else {
-        responses <- unique(c(lapply(Data[complete.cases(Data[, catnames]), catnames], 
-                                   function(x) summary(as.factor(x[which(!is.na(x))])))))
+        responses <- c(lapply(Data[complete.cases(Data[, catnames]), catnames], 
+                                   function(x) summary(as.factor(x[which(!is.na(x))]))))
       }
     } else {
       if(nmissing){
-        responses <- unique(c(lapply(Data[, catnames], function(x) summary(as.factor(x)))))
+        responses <- c(lapply(Data[, catnames], function(x) summary(as.factor(x))))
       } else {
-        responses <- unique(c(lapply(Data[, catnames], function(x) summary(as.factor(x[which(!is.na(x))])))))
+        responses <- c(lapply(Data[, catnames], function(x) summary(as.factor(x[which(!is.na(x))]))))
       }
     }
     
