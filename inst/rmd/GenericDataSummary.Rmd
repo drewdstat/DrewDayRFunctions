@@ -31,7 +31,7 @@ if(!is.null(idvar) & any(idvar %in% catvars))
 
 howhigh <- 5 + (((length(contvars) - 5)/5) * 3)
 
-knitr::opts_chunk$set(echo = F, warning = T, message = F, fig.align = "center", 
+knitr::opts_chunk$set(echo = F, warning = F, message = F, fig.align = "center", 
                       fig.width = 10, fig.height = howhigh)
 if(is.null(Dict)) dictlogic <- F else dictlogic <- T
 if(is.null(idvar)) idlogic <- F else idlogic <- T
