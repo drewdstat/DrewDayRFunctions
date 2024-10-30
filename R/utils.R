@@ -145,9 +145,13 @@ summtable_tt <- function(vars, Data, varnames = NULL, LODvars = NULL,
                          padj = F, padjmethod = "BH", nonpar = F, perm = F, 
                          signif = F){
   if(signif){
-    roundfunc <- function(x, roundplace){signif(x, roundplace)}
+    roundfunc <- function(x, roundplace){
+      if(!any(c("POSIXt", "Date") %in% class(x))) signif(x, roundplace) else x
+    }
   } else {
-    roundfunc <- function(x, roundplace){round(x, roundplace)}
+    roundfunc <- function(x, roundplace){
+      if(!any(c("POSIXt", "Date") %in% class(x))) round(x, roundplace) else x
+    }
   }
   if(is.null(varnames)){
     varnames <- vars
@@ -704,3 +708,36 @@ confint_qt <- function(beta, se, DF, IQR = 1, level = 0.95){
 
 #The combination formula
 nCr <- function(n, r) factorial(n)/(factorial(r) * factorial(n - r))
+
+#Get all combos
+getcombos <- function(x, y = NULL, r = 2){
+  if(is.character(x)) x <- as.factor(x)
+  if(is.null(levels(x))) xcomb <- "No combos" else {
+    tmp <- tryCatch(combn(levels(x), r, simplify = F), error = function(e) NULL)
+    if(is.null(tmp)) xcomb <- "No combos" else xcomb <- sapply(
+      tmp, function(ww) paste(ww, collapse = "|"))
+  }
+  if(!is.null(y)){
+    if(is.character(y)) y <- as.factor(y)
+    if(is.null(levels(y))){
+      ycomb <- "No combos"
+      xycomb <- xcomb
+    } else {
+      tmp2 <- tryCatch(combn(levels(y), r, simplify = F), 
+                       error = function(e) NULL)
+      if(is.null(tmp2)){
+        ycomb <- "No combos"
+        xycomb <- xcomb} else {
+        ycomb <- sapply(tmp2, function(ww) paste(ww, collapse = "|"))
+        if(length(xcomb) ==1 && xcomb == "No combos"){
+          xycomb <- ycomb
+        } else {
+          xycomb <- expand.grid(X = xcomb, Y = ycomb)
+        }
+      }
+    }
+  }
+  if(is.null(y)) retlist <- list(xcomb = xcomb) else 
+    retlist <- list(xcomb = xcomb, ycomb = ycomb, xycomb = xycomb)
+  return(retlist)
+}
