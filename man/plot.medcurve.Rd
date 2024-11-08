@@ -13,8 +13,7 @@
   addptci = F,
   plotrug = F,
   rugvalues = NULL,
-  xsplineshape = -0.5,
-  smoothci.linetype = "solid"
+  xsplineshape = -0.5
 )
 }
 \arguments{
@@ -36,10 +35,8 @@ and 95\% confidence interval ribbon (if \code{addci = TRUE}) connecting the
 point estimates should be a smoothed x-spline fit
 (\code{\link[ggalt]{stat_xspline}}) if \code{TRUE} or a series
 of straight lines connecting the point estimates if \code{FALSE}. The
-x-spline fit forces the curve to go through each observed point. If
-\code{TRUE}, CIs are not filled in as they are if this is \code{FALSE}
-but instead are red curves on either side of the mean blue curve.
-This defaults to \code{TRUE}.}
+x-spline fit forces the curve to go through each observed point. This
+defaults to \code{TRUE}.}
 
 \item{addpts}{This is a logical value specifying whether to add points for
 the point estimates of the estimate of interest. This defaults to
@@ -62,10 +59,8 @@ will be returned.}
 \item{xsplineshape}{This is a value between -1 and 1 controlling the
 smoothing of the x-spline (see \code{\link[ggalt]{stat_xspline}}) smooth.
 The x-spline approximates a Catmull-Rom spline at -1, has sharp corners at 0,
-and approximates a cubic b-spline at 1. This defaults to -0.5.}
-
-\item{smoothci.linetype}{This allows you to adjust the line type of the red
-CI x-splines if \code{smoothplot = TRUE}. This defaults to \code{"solid"}.}
+and approximates a cubic b-spline at 1. This defaults to -0.5, which has the
+x-spline smoothly curving directly through all points.}
 }
 \value{
 \code{plot.medcurve} returns the specified plot of the class
