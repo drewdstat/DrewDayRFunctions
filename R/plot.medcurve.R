@@ -20,10 +20,8 @@
 #' point estimates should be a smoothed x-spline fit 
 #' (\code{\link[ggalt]{stat_xspline}}) if \code{TRUE} or a series 
 #' of straight lines connecting the point estimates if \code{FALSE}. The 
-#' x-spline fit forces the curve to go through each observed point. If 
-#' \code{TRUE}, CIs are not filled in as they are if this is \code{FALSE} 
-#' but instead are red curves on either side of the mean blue curve. 
-#' This defaults to \code{TRUE}.
+#' x-spline fit forces the curve to go through each observed point. This 
+#' defaults to \code{TRUE}.
 #' @param addpts This is a logical value specifying whether to add points for 
 #' the point estimates of the estimate of interest. This defaults to 
 #' \code{FALSE}.
@@ -41,9 +39,8 @@
 #' @param xsplineshape This is a value between -1 and 1 controlling the 
 #' smoothing of the x-spline (see \code{\link[ggalt]{stat_xspline}}) smooth. 
 #' The x-spline approximates a Catmull-Rom spline at -1, has sharp corners at 0, 
-#' and approximates a cubic b-spline at 1. This defaults to -0.5.
-#' @param smoothci.linetype This allows you to adjust the line type of the red 
-#' CI x-splines if \code{smoothplot = TRUE}. This defaults to \code{"solid"}.
+#' and approximates a cubic b-spline at 1. This defaults to -0.5, which has the 
+#' x-spline smoothly curving directly through all points.
 #' 
 #' @return \code{plot.medcurve} returns the specified plot of the class 
 #' \code{'ggplot'}.
@@ -66,8 +63,7 @@
 plot.medcurve <- function(med.results, plot.est = "ACME", addci = T, 
                           smoothplot = T, addpts = F, addptci = F, 
                           plotrug = F, rugvalues = NULL, 
-                          xsplineshape = -0.5, 
-                          smoothci.linetype = "solid"){
+                          xsplineshape = -0.5){
   if(!plot.est %in% c("ACME", "ADE", "Total", "Proportion")){
     stop(paste0("plot.est must be one of 'ACME', 'ADE', 'Total', ", 
                 "or 'Proportion'"))
@@ -97,15 +93,17 @@ plot.medcurve <- function(med.results, plot.est = "ACME", addci = T,
     geom_hline(yintercept = 0)
   if(addci){
     if(smoothplot){
-      gg1 <- gg1 +  
-        stat_xspline(
+      tmp <- ggplot() + stat_xspline(
           data = plotdat, aes(x = gridmean, y = lci), 
-          spline_shape = xsplineshape, color = "red", size = 1, alpha = 0.7, 
-          linetype = smoothci.linetype) + 
+          spline_shape = xsplineshape) + 
         stat_xspline(
           data = plotdat, aes(x = gridmean, y = uci), 
-          spline_shape = xsplineshape, color = "red", size = 1, alpha = 0.7, 
-          linetype = smoothci.linetype)
+          spline_shape = xsplineshape)
+      tmp <- ggplot_build(tmp)
+      tmp <- data.frame(x = tmp$data[[1]]$x, ymin = tmp$data[[1]]$y, 
+                          ymax = tmp$data[[2]]$y)
+      gg1 <- gg1 + geom_ribbon(data = tmp, aes(x = x, ymin = ymin, ymax = ymax),
+                               fill = "grey50", alpha = 0.5, show.legend = F)
     } else {
       gg1 <- gg1 + geom_ribbon(data = plotdat, aes(x = gridmean, y = est,
                                ymin = lci, ymax = uci),
