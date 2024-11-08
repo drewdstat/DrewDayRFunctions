@@ -649,7 +649,7 @@ myvarcompsummary_cat <- function(catnames, Data, catvarnames = NULL, fontsize = 
   }
 }
 
-#Easy way to get a certain number of quantiles (e.g., 4 for quartiles)
+#Quantile transform a numeric vector into q quantiles (e.g., quartiles if q=4)
 myquantile <- function(x, q, labelnumbers = T){
   mybreaks <- quantile(x, probs = seq(0, 1, by = 1/q))
   if(labelnumbers){
@@ -686,15 +686,15 @@ perm.ttest <- function(x, y = NULL, compvar = NULL, Data, niter = 10000){
 }
 
 #Output coefficients and robust standard errors and p-values
-robustse <- function(x, HCtype="HC0",usedf=F) {
-  mod1 <- lmtest::coeftest(x, vcov = function(x) vcovHC(x,type=HCtype))
+robustse <- function(x, HCtype = "HC0", usedf = F){
+  mod1 <- lmtest::coeftest(x, vcov = function(x) vcovHC(x, type = HCtype))
   if(!usedf){
-    cis<-lmtest::coefci(x, vcov=function(x) sandwich::vcovHC(x,type=HCtype))
+    cis<-lmtest::coefci(x, vcov=function(x) sandwich::vcovHC(x, type = HCtype))
   } else {
-    cis<-lmtest::coefci(x, vcov = function(x) sandwich::vcovHC(x,type=HCtype),
-                df=x$df.residual)
+    cis<-lmtest::coefci(x, vcov = function(x) sandwich::vcovHC(x, type = HCtype),
+                df = x$df.residual)
   }
-  mod1<-cbind(mod1,cis)
+  mod1<-cbind(mod1, cis)
   return(mod1)
 }
 
@@ -704,6 +704,16 @@ confint_qt <- function(beta, se, DF, IQR = 1, level = 0.95){
   ci.upper<-(beta * IQR) + ((se * IQR) * qt(((level/2) + 0.5), DF))
   CIs<-data.frame(CIL = ci.lower, CIU = ci.upper)
   return(CIs)
+}
+
+#Capitalize the 1st letter of either just the 1st word or each word in a string
+capfirst <- function(x, eachword = F) {
+  if(eachword){
+    s1 <- strsplit(x, " ")[[1]]
+    paste0(toupper(substring(s1, 1, 1)), substring(s1, 2), collapse = " ")
+  } else {
+    paste0(toupper(substring(x, 1, 1)), substring(x, 2))
+  }
 }
 
 #The combination formula
@@ -741,3 +751,68 @@ getcombos <- function(x, y = NULL, r = 2){
     retlist <- list(xcomb = xcomb, ycomb = ycomb, xycomb = xycomb)
   return(retlist)
 }
+
+#Find the N closest values in a vector
+findClosest <- function(x, n){
+  x <- sort(x)
+  x[seq.int(which.min(diff(x, lag = n - 1L)), length.out = n)]
+}
+
+#Remove all non-numeric characters from vector and make it as.numeric
+numerize <- function(x) as.numeric(gsub("[^0-9.-]", "", x))
+
+#Remove all columns from a data frame that are all NA, NaN, or user-specified
+# missing characters (by default this includes the empty string "")
+dropnacols <- function(dat, misschars = c("")){
+  dropcols <- which(sapply(dat, function(x) all(is.na(x)|is.nan(
+    as.numeric(x))|as.character(x) %in% misschars)))
+  return(dat[, -dropcols])
+}
+
+#The following rewrites ggalt::stat_xspline so that you don't have to download 
+# that package's annoying proj4 dependency, which can cause download errors. 
+stat_xspline <- function (mapping = NULL, data = NULL, geom = "line", 
+                          position = "identity", na.rm = TRUE, show.legend = NA, 
+                          inherit.aes = TRUE, spline_shape = -0.25, 
+                          open = TRUE, rep_ends = TRUE, ...){
+  layer(stat = StatXspline, data = data, mapping = mapping, 
+        geom = geom, position = position, show.legend = show.legend, 
+        inherit.aes = inherit.aes, params = list(
+          spline_shape = spline_shape, open = open, na.rm = na.rm, 
+          rep_ends = rep_ends, ...))
+}
+StatXspline <- ggproto("StatXspline", Stat, required_aes = c("x", "y"),
+                       compute_group = function(self, data, scales, params,
+                                                spline_shape=-0.25, open=TRUE, 
+                                                rep_ends=TRUE) {
+                         tf <- tempfile(fileext=".png")
+                         png(tf)
+                         plot.new()
+                         tmp <- graphics::xspline(data$x, data$y, spline_shape, open, 
+                                        rep_ends, draw=FALSE, NA, NA)
+                         invisible(dev.off())
+                         unlink(tf)
+                         data.frame(x=tmp$x, y=tmp$y)
+                       })
+geom_xspline <- function(mapping = NULL, data = NULL, stat = "xspline",
+                         position = "identity", na.rm = TRUE, show.legend = NA,
+                         inherit.aes = TRUE,
+                         spline_shape=-0.25, open=TRUE, rep_ends=TRUE, ...) {
+  layer(geom = GeomXspline,
+    mapping = mapping,
+    data = data,
+    stat = stat,
+    position = position,
+    show.legend = show.legend,
+    inherit.aes = inherit.aes,
+    params = list(
+      spline_shape = spline_shape,
+      open = open,
+      na.rm = na.rm,
+      rep_ends = rep_ends,
+      ...)
+  )
+}
+GeomXspline <- ggproto("GeomXspline", GeomLine, required_aes = c("x", "y"),
+                       default_aes = aes(colour = "black", linewidth = 0.5, 
+                                         linetype = 1, alpha = NA))

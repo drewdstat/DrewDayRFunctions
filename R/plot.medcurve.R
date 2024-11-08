@@ -48,7 +48,7 @@
 #' @return \code{plot.medcurve} returns the specified plot of the class 
 #' \code{'ggplot'}.
 #' 
-#' @import ggplot2 ggalt
+#' @import ggplot2
 #' @export plot.medcurve
 #' 
 #' @examples
@@ -98,11 +98,11 @@ plot.medcurve <- function(med.results, plot.est = "ACME", addci = T,
   if(addci){
     if(smoothplot){
       gg1 <- gg1 +  
-        ggalt::stat_xspline(
+        stat_xspline(
           data = plotdat, aes(x = gridmean, y = lci), 
           spline_shape = xsplineshape, color = "red", size = 1, alpha = 0.7, 
           linetype = smoothci.linetype) + 
-        ggalt::stat_xspline(
+        stat_xspline(
           data = plotdat, aes(x = gridmean, y = uci), 
           spline_shape = xsplineshape, color = "red", size = 1, alpha = 0.7, 
           linetype = smoothci.linetype)
@@ -113,7 +113,7 @@ plot.medcurve <- function(med.results, plot.est = "ACME", addci = T,
     }
   }
   if(smoothplot){
-    gg1 <- gg1 + ggalt::stat_xspline(
+    gg1 <- gg1 + stat_xspline(
       data = plotdat, aes(x = gridmean, y = est), spline_shape = -0.5, 
       color = "#3366FF", size = 1)
   } else {
