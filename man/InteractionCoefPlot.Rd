@@ -25,7 +25,7 @@ InteractionCoefPlot(
   robust = T,
   HC = "HC0",
   logistic = F,
-  xlablog10 = F
+  xlab10exp = F
 )
 }
 \arguments{
