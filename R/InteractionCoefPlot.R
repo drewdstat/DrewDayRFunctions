@@ -91,7 +91,7 @@ InteractionCoefPlot <- function(model, data, pred, ixterm, multiplier = 1,
                                 fillcolor = NULL, autotitle = F, addpvallab = F, 
                                 labsize = 4, lengthout = 50, shadebysig = F, 
                                 otherix = F, robust = T, HC = "HC0", 
-                                logistic = F, xlablog10 = F){
+                                logistic = F, xlab10exp = F){
   if(is.null(outname)) outname <- names(model$model)[1]
   if(is.null(predname)) predname <- pred
   if(is.null(ixname)) ixname <- ixterm
@@ -177,7 +177,7 @@ InteractionCoefPlot <- function(model, data, pred, ixterm, multiplier = 1,
     g1 <- g1 + annotate(geom = "text", x = mean(range(data[, ixterm])), 
                         y = max(predcoefdat$UCI), 
                         label = templab, size = labsize, hjust = 0.5, vjust = 1)
-    if(xlablog10){
+    if(xlab10exp){
       g1 <- g1 + scale_x_continuous(labels = scales::label_math(10^.x))
     }
   }
@@ -256,7 +256,7 @@ InteractionCoefPlot <- function(model, data, pred, ixterm, multiplier = 1,
       g2 <- g2 + annotate(geom = "text", x = mean(range(data[, pred])), y = max(othercoefdat$UCI), 
                       label = templab, size = labsize, hjust = 0.5, vjust = 1)
     }
-    if(xlablog10){
+    if(xlab10exp){
       g2 <- g2 + scale_x_continuous(labels = scales::label_math(10^.x))
     }
     retlist <- list(MainGGplot = g1, OtherGGplot = g2, MainMatrix = predcoefdat, 
