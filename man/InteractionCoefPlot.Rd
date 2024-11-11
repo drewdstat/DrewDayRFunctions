@@ -23,6 +23,7 @@ InteractionCoefPlot(
   shadebysig = F,
   otherix = F,
   robust = T,
+  HC = "HC0",
   logistic = F,
   xlablog10 = F
 )
@@ -75,18 +76,23 @@ the null a darker tint of \code{fillcolor}. Defaults to \code{FALSE}.}
 \item{otherix}{An option to include a second plot in which \code{pred} and
 \code{ixterm} are flipped. Defaults to \code{FALSE}.}
 
-\item{robust}{This is an option to use HC0 robust sandwich errors for the CIs
+\item{robust}{This is an option to use robust sandwich errors for the CIs
 (see \code{\link[sandwich]{vcovHC}} for details on HC estimators). Defaults to
 \code{TRUE}. This should be set to \code{TRUE} if model is a robust Poisson
 model for RR estimation.}
+
+\item{HC}{This is a character value defining the robust estimator used if
+\code{robust = TRUE} (see \code{\link[sandwich]{vcovHC}} for details on HC
+estimators). This defaults to \code{"HC0"}.}
 
 \item{logistic}{An option for if model is a logistic \code{\link[stats]{glm}}.
 Defaults to \code{FALSE}. This option sets the null line to 1, exponentiates
 all the coefficients to bring them to an odds ratio scale, and changes the y
 label to "OR" instead of "Coefficient".}
 
-\item{xlablog10}{An option to change the x-axis labels to be of the form
-"10^x". This is useful if your predictor of interest (or also the \code{ixterm}
+\item{xlab10exp}{An option to change the x-axis labels to be of the form
+"10^x" (see \code{\link[scales]{label_math}}). This is useful if your
+predictor of interest (or also the \code{ixterm}
 variable if \code{otherix} is \code{TRUE}) is on a logarithmic scale.}
 }
 \value{
