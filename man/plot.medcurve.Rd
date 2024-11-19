@@ -13,7 +13,9 @@
   addptci = F,
   plotrug = F,
   rugvalues = NULL,
-  xsplineshape = -0.5
+  xsplineshape = -0.5,
+  ribbon = T,
+  addcurve = T
 )
 }
 \arguments{
@@ -61,6 +63,23 @@ smoothing of the x-spline (see \code{\link[ggalt]{stat_xspline}}) smooth.
 The x-spline approximates a Catmull-Rom spline at -1, has sharp corners at 0,
 and approximates a cubic b-spline at 1. This defaults to -0.5, which has the
 x-spline smoothly curving directly through all points.}
+
+\item{ribbon}{This is a logical value specifying whether the confidence
+interval curves (if \code{addci = TRUE}) will be plotted as curves (if
+\code{FALSE}) or as a filled-in area specified by \code{geom_ribbon} (if
+\code{TRUE}). This values defaults to \code{TRUE}. In some cases (e.g.,
+sometimes with \code{plot.est = "Proportion"}), the confidence interval
+curves can be sufficiently different lengths the x-values of the CI curve
+boundaries will be different lengths and not coincide enough to merge to form
+the dataset used by geom_ribbon to fill in the ribbon area. If that's the
+case, a warning will print and the argument \code{'ribbon'} will be ignored.}
+
+\item{addcurve}{This is a logical value specifying whether a curve linking
+the mediation estimate values (and the CI values if \code{addci = TRUE})
+should be drawn. One may want to plot just the points and CIs without linking
+them with a curve line, in which case one should set this argument to
+\code{FALSE} and specify \code{addpts = TRUE} and \code{addptci = TRUE}. This
+defaults to \code{TRUE}.}
 }
 \value{
 \code{plot.medcurve} returns the specified plot of the class
@@ -75,13 +94,13 @@ plotted at the mean of each treatment 'bin'.
 \examples{
 \dontrun{
 #Smoothed ACME fit
-plot(medres)
+plot.medcurve(medres)
 
 #Non-smoothed ADE fit with rug plot
-plot(medres, "ADE", smoothplot = F, plotrug = T, rugvalues = meddata$treat)
+plot.medcurve(medres, "ADE", smoothplot = F, plotrug = T, rugvalues = meddata$treat)
 
 #Smoothed Total Effect fit with point estimate points and CIs
-plot(medres, "Total", addpts = T, addptci = T)
+plot.medcurve(medres, "Total", addpts = T, addptci = T)
 }
 
 }
