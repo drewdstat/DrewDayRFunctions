@@ -86,7 +86,8 @@ replace the leading 2 "FF" characters with "#" (e.g., FF00CD66 -> #00CD66).
 }
 \examples{
 # Run the function on the example .xlsx file provided with the package
-example_xlsx <- findexampledata("ExcelColorBackground.xlsx")
+example_xlsx <- DrewDayRFunctions:::findexampledata(
+"ExcelColorBackground.xlsx")
 xldata <- as.data.frame(readxl::read_excel(example_xlsx))
 xlcolors <- GetExcelColors(example_xlsx)
 
