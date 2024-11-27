@@ -769,6 +769,15 @@ dropnacols <- function(dat, misschars = c("")){
   return(dat[, -dropcols])
 }
 
+#Get path to example data files
+findexampledata <- function(path = NULL){
+  if(is.null(path)){ 
+    dir(system.file("exdata", package = "DrewDayRFunctions"))
+  } else {
+    system.file("exdata", path, package = "DrewDayRFunctions", mustWork = T)
+  }
+}
+
 #The following rewrites ggalt::stat_xspline so that you don't have to download 
 # that package's annoying proj4 dependency, which can cause download errors. 
 stat_xspline <- function (mapping = NULL, data = NULL, geom = "line", 

@@ -69,10 +69,26 @@
 #' @export GetExcelColors
 #' 
 #' @examples 
+#' # Run the function on the example .xlsx file provided with the package
+#' example_xlsx <- findexampledata("ExcelColorBackground.xlsx")
+#' xldata <- as.data.frame(readxl::read_excel(example_xlsx))
+#' xlcolors <- GetExcelColors(example_xlsx)
 #' 
-#' # The following is just an example, but won't actually run since the filepath
-#' #  doesn't lead to any actual .xlsx file.
+#' # See which background colors there are and for how many cells
+#' xlcolors$CountPlot 
 #' 
+#' # Explore what those different colors might mean
+#' tmp <- suppressMessages(reshape2::melt(xldata))
+#' tmp2 <- suppressMessages(reshape2::melt(
+#' xlcolors$ColorData, id.vars = NULL, value.name = "color"))
+#' tmp$color <- tmp2$color
+#' rm(tmp2)
+#' aggregate(value ~ color, tmp, 
+#' function(x) paste(round(min(x), 2), round(max(x), 2), sep = ", "))
+#' #Here we can see that green is 0-2, blue is 2-6, and purple is 6-10
+#' 
+#' #Below is a hypothetical example that can't be run since it's not a 
+#' # real .xlsx file
 #' \dontrun{
 #' dir <- "X:/"
 #' xlfile <- "ExampleData.xlsx"
@@ -81,7 +97,7 @@
 #' # this grabs color data from the 2nd sheet, skipping the first 4 rows as well
 #' #  as rows 6 to 7.
 #' }
-
+#' 
 GetExcelColors <- function(filepath, sheet = 1, skip = 0, skiprows = NULL,
                            include_row1_colors = FALSE){
   Data <- readxl::read_xlsx(filepath, sheet = sheet, skip = skip)
