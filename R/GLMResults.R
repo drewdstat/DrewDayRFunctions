@@ -272,8 +272,9 @@
 #' \item{GGplot}{A forest ggplot of all predictor of interest coefficients and 
 #' confidence intervals or a list of those ggplots.} 
 #' 
-#' @import caret lmtest sandwich logistf splines ggplot2 DHARMa pbapply cowplot MASS
+#' @import caret lmtest sandwich logistf splines ggplot2 DHARMa pbapply cowplot
 #' @importFrom purrr map
+#' @importFrom MASS glm.nb
 #' 
 #' @export GLMResults
 #' 
@@ -303,7 +304,7 @@
 #' infert$induced <- as.factor(infert$induced)
 #' glmres <- GLMResults(c("induced", "age"), c("case", "anyspont"), 
 #' c("education"), infert, ixterm = "parity", covix = "education", 
-#' binomfam = binomial("probit"), altprednames = c("Education", "Age"), 
+#' binomfam = binomial("probit"), altprednames = c("Induced", "Age"), 
 #' altoutnames = c("Infertile", "Spontaneous"), altixname = "Parity", 
 #' extradiag = T)
 #'                    

@@ -90,7 +90,8 @@
 #' \code{mod} was a \code{list} or \code{mira} object, this will be a list of 
 #' lists of model objects.}
 #' 
-#' @import logistf MASS sandwich
+#' @import logistf sandwich
+#' @importFrom MASS glm.nb
 #' @export ContrastCoefficients
 #' 
 #' @details

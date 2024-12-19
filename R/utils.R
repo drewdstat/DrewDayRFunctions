@@ -968,7 +968,7 @@ GLMResults_plot <- function(Resultsmat, horint = 0, facetcol = NULL,
   if(is.null(facetcol)){
     facetcol <- length(unique(Resultsmat$Outcome))
   }
-  if(!is.null(ixterm) & length(ixcontrasts) > 1){
+  if(!is.null(ixterm) && length(ixcontrasts) > 1){
     plotData <- Resultsmat[grep("|", Resultsmat$Variable, fixed = T), ]
     plotData$Interaction_Level <- gsub(".*[|]", "", plotData$Variable)
     plotData$Interaction_Level <- factor(
