@@ -5,13 +5,13 @@ Author: Drew Day [aut, cre]
 Maintainer: Drew Day <dday612@gmail.com>
 Authors@R: c(
     person("Drew", "Day", email = "dday612@gmail.com", role = c("aut", "cre")))
-Description: Includes a variety of useful functions for rapidly performing regressions, performing sample size calculations, visualizing results, and other epidemiology-related applications collated over the career of Drew Day, an environmental epidemiologist.
+Description: Includes a variety of useful functions for rapidly performing regressions, visualizing results, and other epidemiology-related applications collated over the career of Drew Day, an environmental epidemiologist.
 License: GPL-3
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
 Imports: 
-    mgcv, mgcViz, dplyr, sandwich, lmtest, ggplot2, caret, splines, emmeans, logistf, mice, SimMultiCorrData, DHARMa, pbapply, cowplot, scales, msm, fastDummies, rcompanion, DT, kableExtra, htmltools
+    mgcv, mgcViz, dplyr, sandwich, lmtest, ggplot2, caret, splines, logistf, mice, SimMultiCorrData, DHARMa, pbapply, cowplot, scales, msm, fastDummies, rcompanion, DT, kableExtra, htmltools, MASS, mediation, tidyxl, purrr
 Suggests: 
     rmarkdown, knitr, testthat (>= 3.0.0)
 VignetteBuilder: knitr
