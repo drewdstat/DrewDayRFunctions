@@ -395,7 +395,7 @@ infert$anyspont <- ifelse(infert$spontaneous > 0, 1, 0)
 infert$induced <- as.factor(infert$induced)
 glmres <- GLMResults(c("induced", "age"), c("case", "anyspont"), 
 c("education"), infert, ixterm = "parity", covix = "education", 
-binomfam = binomial("probit"), altprednames = c("Education", "Age"), 
+binomfam = binomial("probit"), altprednames = c("Induced", "Age"), 
 altoutnames = c("Infertile", "Spontaneous"), altixname = "Parity", 
 extradiag = T)
                    
