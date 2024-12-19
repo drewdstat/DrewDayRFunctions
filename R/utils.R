@@ -961,9 +961,9 @@ GLMResults_plot <- function(Resultsmat, horint = 0, facetcol = NULL,
                             colorpal = NULL, log10yaxis = F, 
                             Predtitle = "Exposure"){
   if(any(grepl("\\:", Resultsmat$Variable))){
-    exmarg <- Resultsmat[grep("\\|", Resultsmat$Variable), "Variable"][1]
-    ixterm <- gsub(".*\\|", "", exmarg)
-    ixterm <- gsub(" \\=.*", "", ixterm)
+    exint <- Resultsmat[grep("\\:", Resultsmat$Variable), "Variable"][1]
+    ixterm <- gsub(".*\\:", "", exint)
+    ixterm <- gsub(" \\(.*", "", ixterm)
     ixcontrasts <- Resultsmat[grep("\\:", Resultsmat$Variable), "Variable"]
     if(any(grepl(paste0(ixterm, " \\("), ixcontrasts))){
       ixcontrasts <- unique(gsub(paste0(".*", ixterm, " "), "", ixcontrasts))
@@ -973,7 +973,7 @@ GLMResults_plot <- function(Resultsmat, horint = 0, facetcol = NULL,
   if(is.null(facetcol)){
     facetcol <- length(unique(Resultsmat$Outcome))
   }
-  if(!is.null(ixterm) && length(ixcontrasts) > 1){
+  if(!is.null(ixterm) && grepl("\\|", Resultsmat$Variable)){ 
     plotData <- Resultsmat[grep("|", Resultsmat$Variable, fixed = T), ]
     plotData$Interaction_Level <- gsub(".*[|]", "", plotData$Variable)
     plotData$Interaction_Level <- factor(
