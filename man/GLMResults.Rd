@@ -411,6 +411,7 @@ glmres <- GLMResults(carpreds[-1], c("vs", "am"), c("gear", "carb"), mtcars,
                      altprednames  =  c("Displacement", "Cylinders", 
                      "Axle Ratio", "Weight"), 
                      altoutnames  =  c("Engine Type", "Transmission Type"))
+glmres$GGplot
 
 # Mix of continuous outcomes, binary outcomes with logistic GLMs, 
 # and count outcomes with negative binomial GLMs, all with continuous and 
@@ -442,5 +443,6 @@ mtcars_miss[sample(1:nrow(mtcars_miss), 4), "wt"] <- NA
 lmres <- GLMResults(prednames  =  carpreds, outnames  =  carouts, 
                    covnames  =  carcovars, Data  =  mtcars, mice  =  T, 
                    micevars  =  c("cyl", "wt"), robust  =  F, extradiag = F)
+lmres$GGplot  
             
 }
