@@ -15,22 +15,25 @@ GLMResults(
   logbaseout = exp(1),
   Outtitle = "Outcome",
   Predtitle = "Exposure",
-  MyMult = 1,
   ixterm = NULL,
   Firth = F,
   altprednames = NULL,
   altoutnames = NULL,
   altixname = NULL,
-  binomlink = "logit",
-  binfunc = binomial,
+  binomfam = binomial("logit"),
+  integerascount = F,
+  countfam = poisson("log"),
   robust = T,
   robustdf = F,
   HCtype = "HC0",
   predspline = F,
+  splinetype = "ns",
   predsplinedf = 3,
-  plotExpBeta = F,
-  plotPercChange = F,
-  LOOCV = F,
+  coeftrans_cont = NULL,
+  coeftrans_binom = exp,
+  coeftrans_count = exp,
+  KFCV = F,
+  KF = 10,
   facetcol = NULL,
   covix = NULL,
   ixpred = T,
@@ -38,12 +41,14 @@ GLMResults(
   leverage.test = F,
   leverage.cutoff = 0.2,
   leverage.meancutoff = NULL,
-  post.power = F,
-  effect.size = 0.5,
-  nsim = 1000,
   mice = F,
   micevars = NULL,
-  miceiter = 10
+  miceiter = 10,
+  returnplot = T,
+  colorbypred = F,
+  colorpal = NULL,
+  log10yaxis = F,
+  yl = "Coefficient"
 )
 }
 \arguments{
@@ -54,238 +59,310 @@ can refer to character, factor, or numeric columns in the data frame.}
 \item{outnames}{A character vector of the column names of outcome variables
 you'd like to evaluate in separate regressions. These column names can refer
 to character, factor, or numeric columns in the data frame. For each
-\code{outnames}, \code{\link[stats]{lm}\code{()}} linear regressions will be
-run if the referenced column is numeric, or a \code{\link[stats]{glm}}\code{()}
-GLM with a \code{\link[stats]{binomial}}\code{()} family will be run with the
-link function specified in the input \code{binomlink}. This does not yet support
-characters or factors with >2 unique values (i.e., it can only accommodate
-continuous or binary outcome variables).}
+\code{outnames}, \code{\link[stats]{lm}} linear regressions will be
+run if the referenced column is numeric, or a \code{\link[stats]{glm}}
+GLM with a \code{\link[stats]{binomial}} family will be run with the
+link function specified in the input \code{binomlink}. This does not yet
+support characters or factors with >2 unique values (i.e., it can only
+accommodate continuous or binary outcome variables).}
 
 \item{covnames}{Either a character vector of column names for all the
 covariates you'd like to include in each regression or a list of character
 vectors equal in length to the length of the unique combination of prednames
-and \code{outnames}. Defaults to \code{NULL}, meaning no covariates are
+and \code{outnames}. This defaults to \code{NULL}, meaning no covariates are
 included. This can be a list in order to control for separate covariates for
 each unique combination of \code{prednames} and \code{outnames}, in which
 case the list must be of length \code{length(prednames) * length(outnames)}.
-Note that in ordering this list the function loops through the \code{prednames}
-and then the \code{outnames} (e.g., Outcome 1 - Predictor 1, Outcome 1 - Predictor 2,
-Outcome 1 - Predictor 3, Outcome 2 - Predictor 1, etc.), and so you should
-order the list of covariates accordingly. These can include spline terms, such as
+Note that in ordering this list the function loops through the
+\code{prednames} and then the \code{outnames} (e.g., Outcome 1 - Predictor 1,
+Outcome 1 - Predictor 2, Outcome 1 - Predictor 3,
+Outcome 2 - Predictor 1, etc.), and so you should order the list of
+covariates accordingly. These can include spline terms, namely
 \code{\link[splines]{ns}} natural splines or \code{\link[splines]{bs}}
-b-splines as defined by the 'splines' package (e.g., \code{"ns(Year, df=3)"}).
-These can also include interaction terms denoted by the ":" separator , though
-you should make sure to include the main effects too (e.g., \code{c("Income", 
-"HouseholdSize", "Income:HouseholdSize")}).}
+b-splines as defined by the 'splines' package (e.g.,
+\code{"ns(Year, df = 3)"}). These can also include interaction terms denoted
+by the ":" separator , though the user should make sure to include the main
+effects too (e.g.,
+\code{covnames = c("Income", "HouseholdSize", "Income:HouseholdSize")}).}
 
-\item{Data}{A data frame object of class "data.frame".}
+\item{Data}{A data frame object of class "data.frame". All variables
+defined in \code{prednames}, \code{outnames}, \code{covnames}, and
+\code{ixterm} should be present in this data frame.}
 
 \item{logout}{If \code{TRUE}, this will log-transform each outcome variable
-(the log base will be \code{logbaseout}) prior to running the regression and then
-return both the raw coefficients as well as converted coefficients to percent
-changes using the formula percent change = (exp(raw coefficient)-1) x 100.
-Can be either a single value or a logical vector of length equal to the
-length of \code{outnames}. Defaults to \code{FALSE}.}
+(the log base will be \code{logbaseout}) prior to running the regression.
+This can be either a single value or a logical vector of length equal to the
+length of \code{outnames}. This defaults to \code{FALSE}.}
 
-\item{logpred}{If \code{TRUE}, this will log-transform each predictor variable
-(the log base will be \code{logbasepred}) prior to running the regression and
-then return the raw coefficients. Can be either a single value or a logical
-vector of length equal to the length of \code{prednames}. Defaults to \code{FALSE}.}
+\item{logpred}{If \code{TRUE}, this will log-transform each predictor
+variable (the log base will be \code{logbasepred}) prior to running the
+regression. This can be either a single value or a logical vector of length
+equal to the length of \code{prednames}. This defaults to \code{FALSE}.}
 
 \item{logbasepred}{The base for the log-transformation of one or more of the
-predictor variables. Defaults to 10.}
+predictor variables. This defaults to 10.}
 
-\item{logbaseout}{The base for the log transformation of the outcome variables.
-Defaults to \code{exp(1)} (i.e., natural log transformation).}
+\item{logbaseout}{The base for the log transformation of the outcome
+variables. Defaults to \code{exp(1)} (i.e., natural log transformation).}
 
 \item{Outtitle}{Defines the title used for the column of outcome variables
-in the table and on the plot. Defaults to \code{"Outcome"}.}
+in the table and on the plot. This defaults to \code{"Outcome"}.}
 
 \item{Predtitle}{Defines the title used for the column of predictor variables
-in the table and on the plot. Defaults to \code{"Exposure"}.}
-
-\item{MyMult}{The table will output raw and transformed coefficients and CIs.
-This multiplier is an optional scalar to multiply the raw coefficients for an
-estimate of the coefficient for something other than a 1-unit increase.
-Defaults to 1, and can be either a number or the character \code{"IQR"}, in
-which case the raw coefficient will be multiplied by the interquartile range
-of the predictor variable.}
+in the table and on the plot. This defaults to \code{"Exposure"}.}
 
 \item{ixterm}{A column name for an optional interaction term for the
-\code{prednames} predictors of interest (I abbreviate interaction as 'ix').
-Can refer to either a character, factor, or numeric-class column in the
-\code{Data} data frame. All relevant interaction and main coefficients will
-be output. Defaults to \code{NULL}.}
+\code{prednames} predictors of interest (I abbreviate 'interaction' as 'ix').
+This can refer to either a character, factor, or numeric-class column in the
+\code{Data} data frame. All relevant interaction and main effect coefficients
+will be output. This defaults to \code{NULL}.}
 
-\item{Firth}{If \code{TRUE} and if a given \code{outnames} variable is binary,
-this will perform a Firth's logistic regression (\code{\link[logistf]{logistf}})
-instead of a logistic regression (\code{\link[stats]{glm}}).Defaults to
-\code{FALSE}.}
+\item{Firth}{If \code{TRUE} and if a given \code{outnames} variable is
+binary, this will perform a Firth's logistic regression
+(\code{\link[logistf]{logistf}}) instead of a GLM
+(\code{\link[stats]{glm}}). This defaults to \code{FALSE}.}
 
 \item{altprednames}{This is a vector of character values for alternate names
 for the predictor variable column names specified in \code{prednames} to
-replace those column names in the output tables and plots. Defaults to \code{NULL}.}
+replace those column names in the output tables and plots. This defaults to
+\code{NULL}.}
 
 \item{altoutnames}{This is a vector of character values for alternate names
 for the outcome variable column names specified in \code{outnames} to
-replace those column names in the output tables and plots. Defaults to \code{NULL}.}
+replace those column names in the output tables and plots. This defaults to
+\code{NULL}.}
 
 \item{altixname}{This is a character value for an alternate name for the
 interaction variable column name specified in \code{ixterm} to replace that
-column name in the output tables and plots. Defaults to \code{NULL}.}
+column name in the output tables and plots. This defaults to \code{NULL}.}
 
-\item{binomlink}{The link function to use for the family specified in \code{binfunc}
-for GLMs of binary \code{outnames}. Can be \code{"logit"}, \code{"log"}, or
-\code{"probit"}. Defaults to \code{"logit"}.}
+\item{binomfam}{The family function (see \code{\link[stats]{family}}) to
+use for GLMs of binary or count \code{outnames}. Options include
+\code{\link[stats]{binomial}}, \code{\link[stats]{poisson}},
+\code{\link[stats]{quasibinomial}}, or \code{\link[stats]{quasipoisson}}.
+Refer to the help pages for those families to see options for link functions.
+If the Poisson family is used here, one should make sure to set
+\code{robust = TRUE} to perform a robust Poisson regression for estimating
+risk ratios. This defaults to \code{binomial(link = "logit")}.}
 
-\item{binfunc}{The family to use when \code{outnames} is binary. Can be
-\code{\link[stats]{binomial}}, \code{\link[stats]{poisson}}, or
-\code{\link[stats]{quasibinomial}}. Defaults to \code{\link[stats]{binomial}}.
-If the Poisson family is used, one should make sure to set \code{binomlink} to
-\code{"log"} and \code{robust} to \code{TRUE}.}
+\item{integerascount}{If \code{TRUE}, all outcome variables specified in
+\code{outnames} are treated as count variables if they're of class
+\code{"integer"}, thereby running a GLM for those outcomes with the family
+defined by \code{countfam}. If \code{FALSE}, all outcome variables of class
+\code{"integer"} are treated as continuous, meaning that a \code{lm} is run
+for those outcomes.}
+
+\item{countfam}{The family function (see \code{\link[stats]{family}}) to
+use for GLMs of count \code{outnames} if \code{integerascount} is
+\code{TRUE}. Options include \code{\link[stats]{poisson}} or
+\code{\link[stats]{quasipoisson}}. Refer to the help pages for those
+families to see options for link functions. An additional option is to
+provide the character value \code{"negbin"}, which indicates that a
+negative binomial regression (\code{\link[MASS]{glm.nb}}) will be used with
+the log link function. Note that zero-inflated models require some
+additional model specification and are currently not supported in this
+function. This defaults to \code{poisson("log")}.}
 
 \item{robust}{If \code{TRUE}, this calculates and returns robust CIs and
 p-values based on the \code{\link[sandwich]{vcovHC}} function instead of the
-default CIs and p-values. Defaults to \code{TRUE}.}
+default CIs and p-values. This defaults to \code{TRUE}.}
 
 \item{robustdf}{If \code{FALSE}, this sets \code{\link[lmtest]{coefci}} to
 calculate z-score-based robust confidence intervals if \code{robust} is
-\code{TRUE}. If \code{TRUE}, t test-based robust confidence intervals are instead
-calculated based on the residual degrees of freedom in each regression if
-\code{robust} is \code{TRUE}. Defaults to \code{FALSE}, which is the default
-for the \code{df} parameter in \code{\link[lmtest]{coefci}}.}
+\code{TRUE}. If \code{TRUE}, t test-based robust confidence intervals are
+instead calculated based on the residual degrees of freedom in each
+regression if \code{robust} is \code{TRUE}. This defaults to \code{FALSE},
+which is the default for the \code{df} parameter in
+\code{\link[lmtest]{coefci}}.}
 
 \item{HCtype}{This is the formula used for the \code{\link[sandwich]{vcovHC}}
-function calculation of robust CIs and p-values. Defaults to \code{"HC0"}.}
+function calculation of robust CIs and p-values. This defaults to
+\code{"HC0"}.}
 
-\item{predspline}{If \code{TRUE}, this transforms each predictor of interest
-into a natural spline term using \code{\link[splines]{ns}} from the '
-splines' package. A coefficient for each degree of freedom is returned.
-Defaults to \code{FALSE}.}
+\item{predspline}{If \code{TRUE}, this transforms each predictor
+variable in \code{prednames} that is not categorical into a spline term using
+the 'splines' package. A coefficient for each degree of freedom is returned.
+This defaults to \code{FALSE}.}
+
+\item{splinetype}{This specifies the type of spline function to apply to the
+continuous predictor variables in \code{prednames} if
+\code{predspline = TRUE}. Options include \code{"ns"} for natural splines
+(\code{\link[splines]{ns}}) or \code{"bs"} for b-splines
+(\code{\link[splines]{bs}}). This defaults to \code{"ns"}.}
 
 \item{predsplinedf}{This specifies the number of degrees of freedom for the
-predictor variable natural splines if \code{predspline} is \code{TRUE}.
-Defaults to 3.}
+predictor variable splines if \code{predspline = TRUE}. This defaults to 3.}
 
-\item{plotExpBeta}{If \code{TRUE}, this will plot exp(coefficient) values)
-in the coefficient forest plot. Defaults to \code{FALSE}.}
+\item{coeftrans_cont}{This is an optional function to transform the
+coefficient estimates for models with continuous outcomes (\code{lm} models)
+into another scale to be included in the results table and to be plotted.
+For example, if the outcome is on a log base 2 scale, one could set
+\code{coeftrans_cont = function(x) 2^x} to include coefficients on the
+original outcome scale in the results table and in the plots. If
+\code{coeftrans_cont = NULL} (the default), then only coefficients on the
+original scale will be included in the results table and plotted for all
+continuous outcomes.}
 
-\item{plotPercChange}{If \code{TRUE}, this will plot percent changes (i.e.,
-it will plot (exp(coefficient)-1) x 100 values) in the coefficient forest plot.
-Defaults to \code{FALSE}. If logistic regressions were run and both
-\code{plotExpBeta} and \code{plotPercChange} are \code{FALSE}, raw coefficients
-will be plotted.}
+\item{coeftrans_binom}{This is an optional function to transform the
+coefficient estimates for models with binary outcomes into another scale to
+be included in the results table and to be plotted. An example would be if
+the outcome is binary and a logistic regression is run, one could set
+\code{coeftrans_binom = exp} to get coefficients on the odds ratio scale.
+If \code{coeftrans_binom = NULL}, then only coefficients on the original
+scale will be included in the results table and plotted for all
+binary outcomes. This defaults to \code{exp}.}
 
-\item{LOOCV}{If \code{TRUE}, this performs leave one out cross validation
+\item{coeftrans_count}{This is an optional function to transform the
+coefficient estimates for models with count outcomes into another scale to
+be included in the results table and to be plotted. An example would be if
+the outcome is count data and a Poisson regression is run, one could set
+\code{coeftrans_count = exp} to get coefficients on the incidence ratio
+scale. If \code{coeftrans_count = NULL}, then only coefficients on the
+original scale will be included in the results table and plotted for all
+count outcomes. This defaults to \code{exp}.}
+
+\item{KFCV}{If \code{TRUE}, this performs k-fold cross validation
 using the 'caret' package. If a given model is a linear regression
-(\code{\link[stats]{lm}}), the RMSE will be reported in the tables. If a model
-is a GLM (\code{\link[stats]{glm}}), the accuracy will be reported in the
-tables. The train function input method is \code{trainControl(method = 
-"repeatedcv", number = 10, repeats = 50)}. Defaults to \code{FALSE}.}
+(\code{\link[stats]{lm}}), the RMSE will be reported in the tables. If a
+model is a GLM (\code{\link[stats]{glm}}), the accuracy will be reported
+in the tables. The train function input method is
+\code{trainControl(method  =  "repeatedcv", number  =  KF, repeats  =  50)}.
+This will not be run if the model is of class \code{logistf} or if MICE is
+performed. This defaults to \code{FALSE}.}
+
+\item{KF}{This is an integer value of the number of k-folds to perform if
+\code{KFCV} is \code{TRUE}. This defaults to 10 for 10-fold cross-validation.}
 
 \item{facetcol}{This defines the number of facet_wrap columns for the
 coefficient plots (facetted by outcome variable). If \code{NULL}, this will
-equal the number of unique \code{outnames} values. Defaults to \code{NULL}.}
+equal the number of unique \code{outnames} values. This defaults to
+\code{NULL}.}
 
 \item{covix}{This character vector of covariate column names allows for
 covariates to also have interaction terms with the \code{ixterm} interaction
 variable. If one wishes to have all covariates have interaction terms with
 \code{ixterm}, the character vector for \code{covix} should be the same as
-that for \code{covnames}. Defaults to \code{NULL}, meaning that there are no
-interactions with any of the covariates.}
+that for \code{covnames}. This defaults to \code{NULL}, meaning that there
+are no interactions with any of the covariates.}
 
 \item{ixpred}{If \code{TRUE}, an interaction term is included between each of
 the \code{prednames} predictors of interest and \code{ixterm}. This can be
-set to \code{FALSE} to allow for interactions only with the covariates defined
-in \code{covix}. If \code{covix} is not \code{NULL} and \code{ixpred} is
-\code{TRUE}, there will be interaction terms with both the predictor of
-interest and the covariates. Defaults to \code{TRUE}.}
+set to \code{FALSE} to allow for interactions only with the covariates
+defined in \code{covix}. If \code{covix} is not \code{NULL} and
+\code{ixpred} is \code{TRUE}, there will be interaction terms with both the
+predictor of interest and the covariates. This defaults to \code{TRUE}.}
 
 \item{extradiag}{If \code{TRUE}, this will include extra diagnostic
 information in the tables. For linear regressions (\code{\link[stats]{lm}}),
-this will include a p-value for the heteroskedasticity of model residuals
-(\code{\link[lmtest]{bptest}}), the number of Cook's distances > 0.5, and the
-maximum Cook's distance, the latter two of which define high leverage points.
-For GLMs (\code{\link[stats]{glm}}), this will include output from DHARMa
-package tests, including a heteroskedasticity of residuals p-value from
+this will include the number of Cook's distances > 0.5 and the
+maximum Cook's distance, both of which define high leverage points, as well
+as a p-value for the heteroskedasticity of model residuals
+(\code{\link[lmtest]{bptest}}). For GLMs (\code{\link[stats]{glm}}), this
+will include output from
+\href{https://cran.r-project.org/web/packages/DHARMa/vignettes/DHARMa.html}{DHARMa package tests},
+including the number of Cook's distances > 0.5, the maximum Cook's distance,
+a p-value testing the heteroskedasticity of residuals from
 \code{\link[DHARMa]{testQuantiles}}, the minimum p-value from
-\code{\link[DHARMa]{testQuantiles}}, the number of Cook's distances > 0.5,
-the maximum Cook's distance, a p-value for a test of uniformity
+\code{\link[DHARMa]{testQuantiles}}, a p-value for a test of uniformity
 (\code{\link[DHARMa]{testUniformity}}), a p-value for outliers
 (\code{\link[DHARMa]{testOutliers}}), and a p-value for dispersion
-(\code{\link[DHARMa]{testDispersion}}). Defaults to \code{TRUE}.}
+(\code{\link[DHARMa]{testDispersion}}). If count outcome variables are
+included, an additional p-value for zero inflation
+(\code{\link[DHARMa]{testZeroInflation}}) will be included in the
+results. Note that both the \code{lm} and \code{glm} forms of the p-value
+for heteroskedasticity will be called \code{"Heterosk.p"} in the model
+output table. If the model is of class \code{logistf} or if MICE is used, no
+extra diagnositics will be performed. This defaults to \code{TRUE}.}
 
 \item{leverage.test}{If \code{TRUE}, this runs all regressions while
-excluding "high leverage" observations as defined by the user. Defaults to
-\code{FALSE}.}
+excluding "high leverage" observations as defined by the user. This defaults
+to \code{FALSE}.}
 
 \item{leverage.cutoff}{This is the Cook's distance cutoff above which
 observations will be excluded if \code{leverage.test} is \code{TRUE}.
-Defaults to 0.2.}
+This defaults to 0.2.}
 
 \item{leverage.meancutoff}{If \code{leverage.cutoff} is set to \code{NULL},
 this is used as a multiplier by the mean Cook's distance to get a new cutoff
-above which observations will be excluded if \code{leverage.test} is \code{TRUE}.
-For example, if set to 2, the cutoff will be set to the mean Cook's distance
-times 2. If both \code{leverage.cutoff} and \code{leverage.meancutoff} are set
-to \code{NULL}, the cutoff will be set to the mean Cook's distance times 4.
-Defaults to \code{NULL}.}
-
-\item{post.power}{If \code{TRUE}, this repeatedly simulates data with similar
-structure to the actual data using \code{\link[SimMultiCorrData]{rcorrvar}}
-and then uses a user-specified predictor of interest coefficient to calculate
-a simulated outcome variable (all covariate coefficients are drawn from the
-original model estimates), runs regressions on these simulated data frames,
-collects the iterated predictor of interest coefficient p-values, and
-calculates how many of those p-values are <0.05. This is a form of posterior
-power test for different effect sizes of the predictor of interest association
-with the outcome variable. Defaults to \code{FALSE}.}
-
-\item{effect.size}{This is the user-specified effect size for which the
-post-hoc power is tested if \code{post.power} is set to \code{TRUE}. Defaults
-to 0.5.}
-
-\item{nsim}{This is the number of simulations for the post-hoc power test if
-\code{post.power} is set to \code{TRUE}. Defaults to 1E3.}
+above which observations will be excluded if \code{leverage.test} is
+\code{TRUE}. For example, if set to 2, the cutoff will be set to the mean
+Cook's distance times 2. If both \code{leverage.cutoff} and
+\code{leverage.meancutoff} are set to \code{NULL}, the cutoff will be set
+to the mean Cook's distance times 4. Defaults to \code{NULL}.}
 
 \item{mice}{If TRUE, this performs multiple imputation (MICE using
 \code{\link[mice]{mice}}) on the user-specified variables and pools model
-estimates across the imputed datasets. Defaults to \code{FALSE}.}
+estimates across the imputed datasets. This defaults to \code{FALSE}.}
 
 \item{micevars}{A character vector of the names of variables to be imputed
-using MICE. Defaults to \code{NULL}, in which case it will include all
+using MICE. This defaults to \code{NULL}, in which case it will include all
 predictor, outcome, and covariate variables that have missing values.}
 
 \item{miceiter}{The number of multiple imputations to perform if \code{mice}
-is set to \code{TRUE}. Defaults to 10.}
+is set to \code{TRUE}. This value will be applied to both the \code{m} and
+\code{maxit} arguments of \code{\link[mice]{mice}}. This defaults to 10.}
+
+\item{returnplot}{If \code{TRUE}, this function will also return a
+\code{ggplot} plot object summarizing the results, but it will not if this
+is set to \code{FALSE}. This is a forest plot of the coefficients of
+interest. If there is an interaction term, a list of \code{ggplot} objects
+labelled \code{"Marginal"} and \code{"Interaction"} will be returned, which
+showcase the marginal main effect coefficients and the interaction term
+coefficients, respectively. If multiple outcome types are included in
+\code{outnames}, a list of separate plots for each of these types will be
+returned. This defaults to \code{TRUE}.}
+
+\item{colorbypred}{If \code{TRUE}, the forest plot will be colored by
+each predictor variable if there is no interaction or if that interaction is
+either continuous or categorical with only two levels. This is especially
+useful when multiple discrete predictors, each with several factor levels,
+have been included in the function. This defaults to \code{FALSE}.}
+
+\item{colorpal}{A palette function for coloring the forest plot by predictor
+variables if \code{colorbypred = TRUE}. If \code{NULL}, the default ggplot2
+palette (\code{\link[scales]{hue_pal}}) will be used. This defaults to
+\code{NULL}.}
+
+\item{log10yaxis}{If \code{TRUE}, the y-axis of each plot is transformed to
+a log base 10 scale with labels \code{10^x}. This is useful if coefficients
+are on a multiplicative scale and have a wide range. This defaults to
+\code{FALSE}.}
+
+\item{yl}{The y-axis title to apply to the forest plot(s). This defaults to
+\code{"Coefficient"}.}
 }
 \value{
 \code{GLMResults} returns a list of:
-\item{Matrix}{A table of all the key variables. Beta, LCI, and UCI refer to
-the coefficient for the predictor of interest and the lower and upper 95\%
-confidence intervals, respectively. Beta.Transform, etc. are those estimates
-transformed in some way as specified by the user, for instance by being
-multiplied by the IQR, exponentiated or transformed into percent changes (done
-by default when the outcome is binary), or some other multiplication specified
-by the user.}
-\item{GGplot}{A forest ggplot of all predictor of interest coefficients and CIs.}
-\item{LMlist}{A list of all the lm, glm, or logistf objects run for each unique
-combination of predictor and outcome variable names (i.e., \code{prednames}
-and \code{outnames}).}
+\item{Table}{A table of all the key variables. Coefficient, LCI, and UCI
+refer to the coefficient for the predictor of interest and the lower and
+upper 95\% confidence intervals, respectively. CoefTrans, etc. are those
+estimates transformed in some way as specified by the user if
+\code{coeftrans} is not \code{NULL}, for instance by being exponentiated
+or transformed into percent changes.}
+\item{ModelList}{A list of all the \code{lm}, \code{glm}, \code{glm.nb}, or
+\code{logistf} model objects run for each unique combination of predictor and
+outcome variable names (i.e., \code{prednames} and \code{outnames}).}
+\item{GGplot}{A forest ggplot of all predictor of interest coefficients and
+confidence intervals or a list of those ggplots.}
 }
 \description{
-\code{GLMResults} is a complicated helper function I've piecemeal added to
-throughout the years to handle all sorts of repeated linear regression analyses.
-It outputs a table of key regression output including optional diagnostic test
-values, a list of the model objects, and a coefficient forest plot. Supported
-regression types include linear regression (\code{\link[stats]{lm}}) and
-binomial GLMs (\code{\link[stats]{glm}} with \code{\link[stats]{binomial}}
-family and link \code{"logit"} for logistic regressions or Firth's logistic
-regression using \code{\link[logistf]{logistf}}, \code{"log"} for binomial
-regressions, or \code{"probit"} for probit regressions, in addition to
-robust Poisson regressions for estimating risk ratios for binary
-outcomes where the family is \code{\link[stats]{poisson}}, the link function
-is \code{"log"}, and robust errors are used).
+\code{GLMResults} is a complicated helper function to handle all sorts of
+repeated linear regression analyses. It outputs a table of key regression
+output including optional diagnostic test values, a list of the model
+objects, and a coefficient forest plot or plots. Supported regression types
+include linear regression (\code{\link[stats]{lm}}) and GLMs
+(\code{\link[stats]{glm}} with any \code{\link[stats]{family}} or
+\code{\link[MASS]{glm.nb}}) or Firth's logistic
+regression using \code{\link[logistf]{logistf}}. Furthermore, multiple
+imputation through MICE is supported for all but the \code{logistf} models,
+and all binary contrast coefficients (e.g., \code{level 2 - level 1},
+\code{level 3 - level 2}, etc.) are returned for categorical predictors and
+interaction terms (the latter using
+\code{\link[DrewDayRFunctions]{ContrastCoefficients}}). Additional options
+include estimating robust sandwich errors, incorporating continuous or
+categorical bivariate multiplicative interactions, an option to get k-fold
+cross validation RMSE or accuracy, and a sensitivity test where the model
+is run after omitting high leverage points as determined by Cook's distance.
 }
 \details{
 \code{GLMResults} was built over several years and so has incorporated all
@@ -293,6 +370,10 @@ sorts of functionality related to linear regressions that I've found useful.
 This is my main workhorse function for most analyses calling for regressions.
 }
 \examples{
+# Note that all examples simply showcase the use of different types of 
+# variables with built-in example datasets, not necessarily the best methods 
+# to analyze those particular datasets.
+
 # OLS linear regression with a simple set of outcomes, predictors, and 
 #  covariates without using robust errors
 
@@ -303,7 +384,7 @@ carcovars <- c("am", "vs", "gear")
 
 lmres <- GLMResults(prednames = carpreds, outnames = carouts, 
                    covnames = carcovars, Data = mtcars, robust = F)
-View(lmres$Matrix)
+View(lmres$Table)
 lmres$GGplot
 
 # Probit regression with an interaction term on the predictor of interest and
@@ -311,33 +392,55 @@ lmres$GGplot
 
 data("infert")
 infert$anyspont <- ifelse(infert$spontaneous > 0, 1, 0)
-glmres <- GLMResults(c("induced", "age"), c("case", "anyspont"), c("education"), infert, 
-                     ixterm = "parity", covix = "education", binomlink = "probit", 
-                     altprednames = c("Education", "Age"), 
-                     altoutnames = c("Infertile", "Spontaneous"), 
-                     altixname = "Parity", extradiag = T)
+infert$induced <- as.factor(infert$induced)
+glmres <- GLMResults(c("induced", "age"), c("case", "anyspont"), 
+c("education"), infert, ixterm = "parity", covix = "education", 
+binomfam = binomial("probit"), altprednames = c("Education", "Age"), 
+altoutnames = c("Infertile", "Spontaneous"), altixname = "Parity", 
+extradiag = T)
+                   
 # Visualize continuous * continuous interaction
-interact.plot <- InteractionCoefPlot(glmres$LMlist$`anyspont~induced`, infert, 
-"induced", "parity", addpvallab = T, shadebysig = T)
+interact.plot <- DrewDayRFunctions::InteractionCoefPlot(
+glmres$LMlist$`anyspont~age`, infert, "age", "parity", 
+addpvallab = T, shadebysig = T)
 interact.plot$GGplot
 
-# Robust Poisson regression
+# Robust Poisson regression with a binary outcome
 glmres <- GLMResults(carpreds[-1], c("vs", "am"), c("gear", "carb"), mtcars, 
-                     binomlink = "log", binfunc = poisson,  
-                     altprednames = c("Displacement", "Cylinders", "Axle Ratio", 
-                     "Weight"), altoutnames = c("Engine Type", "Transmission Type"))
+                     binomfam  =  poisson("log"),  
+                     altprednames  =  c("Displacement", "Cylinders", 
+                     "Axle Ratio", "Weight"), 
+                     altoutnames  =  c("Engine Type", "Transmission Type"))
+
+# Mix of continuous outcomes, binary outcomes with logistic GLMs, 
+# and count outcomes with negative binomial GLMs, all with continuous and 
+# categorical predictors and a categorical interaction term.
+infert$parity <- as.integer(infert$parity)
+set.seed(6)
+infert$contout <- infert$age * 0.1 + rnorm(nrow(infert))
+glmres <- GLMResults(c("age", "induced"), c("parity", "anyspont", "contout"), 
+NULL, infert, ixterm = "education", countfam = "negbin", integerascount = T, 
+extradiag = F, coeftrans_binom = NULL, altprednames  =  c("Age", "Induced"), 
+altoutnames  =  c("Parity", "Spontaneous", "Continuous Outcome"), 
+altixname  =  "Education")
+if(require(cowplot)){
+plotlist <- lapply(glmres$GGplot, 
+function(x) cowplot::plot_grid(plotlist = x, nrow = 1))
+cowplot::plot_grid(plotlist = plotlist, ncol = 1, labels = names(plotlist), 
+hjust = 0)
+}
 
 # MICE example
-# note that robust errors are not attainable when using MICE, so I use robust = F
-
+# note that robust errors are not attainable when using MICE, so I use 
+# robust  =  F
 mtcars_miss <- mtcars
 set.seed(101)
 mtcars_miss[sample(1:nrow(mtcars_miss), 3), "cyl"] <- NA
 set.seed(104)
 mtcars_miss[sample(1:nrow(mtcars_miss), 4), "wt"] <- NA        
 
-lmres <- GLMResults(prednames = carpreds, outnames = carouts, 
-                   covnames = carcovars, Data = mtcars, mice = T, 
-                   micevars = c("cyl", "wt"), robust = F)
+lmres <- GLMResults(prednames  =  carpreds, outnames  =  carouts, 
+                   covnames  =  carcovars, Data  =  mtcars, mice  =  T, 
+                   micevars  =  c("cyl", "wt"), robust  =  F, extradiag = F)
             
 }

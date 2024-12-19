@@ -9,13 +9,14 @@
   plot.est = "ACME",
   addci = T,
   smoothplot = T,
-  addpts = F,
-  addptci = F,
+  addpts = T,
+  addptci = T,
   plotrug = F,
   rugvalues = NULL,
   xsplineshape = -0.5,
-  ribbon = T,
-  addcurve = T
+  ribbon = F,
+  addcurve = T,
+  addstep = F
 )
 }
 \arguments{
@@ -72,7 +73,8 @@ sometimes with \code{plot.est = "Proportion"}), the confidence interval
 curves can be sufficiently different lengths the x-values of the CI curve
 boundaries will be different lengths and not coincide enough to merge to form
 the dataset used by geom_ribbon to fill in the ribbon area. If that's the
-case, a warning will print and the argument \code{'ribbon'} will be ignored.}
+case, a warning will print and the argument \code{'ribbon'} will be ignored.
+This defaults to \code{FALSE}.}
 
 \item{addcurve}{This is a logical value specifying whether a curve linking
 the mediation estimate values (and the CI values if \code{addci = TRUE})
@@ -80,6 +82,13 @@ should be drawn. One may want to plot just the points and CIs without linking
 them with a curve line, in which case one should set this argument to
 \code{FALSE} and specify \code{addpts = TRUE} and \code{addptci = TRUE}. This
 defaults to \code{TRUE}.}
+
+\item{addstep}{This is a logical value specifying whether the differences
+between successive pairs of control and treated values if control values
+vary in the \code{medcurve} object should be plotted as a step function. In
+this visualization, the control and treated values form the boundaries of
+each step, and the y-axis value of each step is the estimate of interest for
+that set of control and treated values. This defaults to \code{FALSE}.}
 }
 \value{
 \code{plot.medcurve} returns the specified plot of the class
@@ -97,7 +106,8 @@ plotted at the mean of each treatment 'bin'.
 plot.medcurve(medres)
 
 #Non-smoothed ADE fit with rug plot
-plot.medcurve(medres, "ADE", smoothplot = F, plotrug = T, rugvalues = meddata$treat)
+plot.medcurve(medres, "ADE", smoothplot = F, plotrug = T, 
+rugvalues = meddata$treat)
 
 #Smoothed Total Effect fit with point estimate points and CIs
 plot.medcurve(medres, "Total", addpts = T, addptci = T)
