@@ -1052,7 +1052,7 @@ GLMResults_plot <- function(Resultsmat, horint = 0, facetcol = NULL,
       breaks = scales::trans_breaks("log10", function(x) 10^x),
       labels = scales::trans_format("log10", math_format(10^.x)))
   } else {
-    if(length(ixcontrasts) > 1){
+    if(any(grepl("\\|", Resultsmat$Variable))){
       gg1 <- ggplot(data = plotData, aes(x = Marginal_Level, y = TransCoef, 
                                          color = Interaction_Level)) + 
         geom_errorbar(aes(ymin = TransLCI, ymax = TransUCI), 
