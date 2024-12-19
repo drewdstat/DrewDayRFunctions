@@ -954,6 +954,23 @@ margin_spacer <- function(x) {
   else return(0)
 }
 
+#color names to hexadecimal colors
+col2hex <- function(x, alpha = FALSE) {
+  args <- as.data.frame(t(col2rgb(x, alpha = alpha)))
+  args <- c(args, list(names = x, maxColorValue = 255))
+  do.call(rgb, args)
+}
+
+#Custom discrete palette function
+palfunc <- function(cols = RColorBrewer::brewer.pal(8, "Set2")){
+  if(!is.null(names(cols))) cols <- unname(cols)
+  out <- function(n, col = cols){
+    if(missing(n)) n = length(col)
+    col[1:n]
+  } 
+  return(out)
+}
+
 # A function for creating a plot specifically based on the Resultsmat table 
 # internally produced in the GLMResults function.
 GLMResults_plot <- function(Resultsmat, horint = 0, facetcol = NULL, 
