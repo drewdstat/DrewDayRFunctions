@@ -823,6 +823,11 @@ getmodelcoefs <- function(mod, pred = NULL, ixterm = NULL, robust = T,
                             rownames(modcoef)), ]
     modcoef1 <- modcoef[which(!grepl("\\:", rownames(modcoef))), ]
     modcoef2 <- modcoef[grep("\\:", rownames(modcoef)), ]
+    if(!is.matrix(modcoef2)){
+      modcoef2 <- as.matrix(modcoef2, nrow = 1)
+      colnames(modcoef2) <- colnames(modcoef1)
+      rownames(modcoef2) <- rownames(modcoef)[grep("\\:", rownames(modcoef))]
+    }
     ixrowlabs <- rownames(modcoef2)[grep(paste0("\\:", ixterm), 
                                          rownames(modcoef2))]
     modcoef2 <- modcoef2[grep(paste0("\\:", ixterm), rownames(modcoef2)), ]
