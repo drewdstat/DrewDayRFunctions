@@ -49,13 +49,20 @@
 #' curves can be sufficiently different lengths the x-values of the CI curve 
 #' boundaries will be different lengths and not coincide enough to merge to form 
 #' the dataset used by geom_ribbon to fill in the ribbon area. If that's the 
-#' case, a warning will print and the argument \code{'ribbon'} will be ignored.
+#' case, a warning will print and the argument \code{'ribbon'} will be ignored. 
+#' This defaults to \code{FALSE}.
 #' @param addcurve This is a logical value specifying whether a curve linking 
 #' the mediation estimate values (and the CI values if \code{addci = TRUE}) 
 #' should be drawn. One may want to plot just the points and CIs without linking 
 #' them with a curve line, in which case one should set this argument to 
 #' \code{FALSE} and specify \code{addpts = TRUE} and \code{addptci = TRUE}. This 
 #' defaults to \code{TRUE}.
+#' @param addstep This is a logical value specifying whether the differences 
+#' between successive pairs of control and treated values if control values 
+#' vary in the \code{medcurve} object should be plotted as a step function. In 
+#' this visualization, the control and treated values form the boundaries of 
+#' each step, and the y-axis value of each step is the estimate of interest for 
+#' that set of control and treated values. This defaults to \code{FALSE}.
 #' 
 #' @return \code{plot.medcurve} returns the specified plot of the class 
 #' \code{'ggplot'}.
@@ -69,16 +76,18 @@
 #' plot.medcurve(medres)
 #' 
 #' #Non-smoothed ADE fit with rug plot
-#' plot.medcurve(medres, "ADE", smoothplot = F, plotrug = T, rugvalues = meddata$treat)
+#' plot.medcurve(medres, "ADE", smoothplot = F, plotrug = T, 
+#' rugvalues = meddata$treat)
 #' 
 #' #Smoothed Total Effect fit with point estimate points and CIs
 #' plot.medcurve(medres, "Total", addpts = T, addptci = T)
 #' }
 #' 
 plot.medcurve <- function(med.results, plot.est = "ACME", addci = T, 
-                          smoothplot = T, addpts = F, addptci = F, 
+                          smoothplot = T, addpts = T, addptci = T, 
                           plotrug = F, rugvalues = NULL, 
-                          xsplineshape = -0.5, ribbon = T, addcurve = T){
+                          xsplineshape = -0.5, ribbon = F, addcurve = T, 
+                          addstep = F){
   if(!plot.est %in% c("ACME", "ADE", "Total", "Proportion")){
     stop(paste0("plot.est must be one of 'ACME', 'ADE', 'Total', ", 
                 "or 'Proportion'"))
@@ -87,11 +96,13 @@ plot.medcurve <- function(med.results, plot.est = "ACME", addci = T,
     stop(paste0("If plotrug = TRUE, you must supply a vector of numeric values",
                 " for rugvalues."))
   }
-  if(!addcurve & !addpts & !addptci){
-    stop(paste0("At least one of addcurve, addpts, and addptci must be TRUE."))
+  if(!addcurve & !addpts & !addptci & !addstep){
+    stop(paste0("At least one of addcurve, addpts, addptci, and addstep",
+                " must be TRUE."))
   }
+  
   plotdat <- med.results
-  plotdat$gridmean <- rowMeans(plotdat[c("control.value", "treat.value")])
+  
   if(plot.est == "ACME"){
     plotdat[, c("est", "lci", "uci")] <- plotdat[
       , c("d.avg", "d.avg.ci.2.5", "d.avg.ci.97.5")]
@@ -109,8 +120,24 @@ plot.medcurve <- function(med.results, plot.est = "ACME", addci = T,
       , c("tau", "tau.ci.2.5", "tau.ci.97.5")]
     plot.est <- "Total Effect"
   }
+  
   gg1 <- ggplot() + theme_bw() +
     geom_hline(yintercept = 0)
+  
+  fixctrl <- length(unique(plotdat$control.value)) == 1
+  if(fixctrl){
+    plotdat <- rbind(plotdat, rep(NA, ncol(plotdat)))
+    plotdat[nrow(plotdat), c("control.value", "treat.value")] <- 
+      plotdat[1, "control.value"]
+    plotdat[nrow(plotdat), c("est", "lci", "uci")] <- 0
+    plotdat$PointType <- "A"
+    plotdat[nrow(plotdat), "PointType"] <- "B"
+    plotdat$gridmean <- plotdat[, "treat.value"]
+    plotdat <- plotdat[with(plotdat, order(treat.value)), ]
+  } else {
+    plotdat$gridmean <- rowMeans(plotdat[c("control.value", "treat.value")])
+  }
+  
   if(addci){
     if(smoothplot){
       if(ribbon){
@@ -164,16 +191,31 @@ plot.medcurve <- function(med.results, plot.est = "ACME", addci = T,
     }
   }
   gg1 <- gg1 + xlab("Treatment") + ylab(plot.est)
-  if(addpts) gg1 <- gg1 + geom_point(data = plotdat, 
-                                     aes(x = gridmean, y = est), size = 2)
   if(addptci) gg1 <- gg1 + geom_errorbar(data = plotdat, aes(
     x = gridmean, y = est, ymin = lci, ymax = uci))
+  if(addpts){
+    if(fixctrl){
+      gg1 <- gg1 + geom_point(data = plotdat, aes(
+        x = gridmean, y = est, size = PointType, color = PointType)) + 
+        scale_color_manual(values = c("black", "red"), guide = "none") + 
+        scale_size_manual(values = c(2, 4), guide = "none")
+    } else {
+      gg1 <- gg1 + geom_point(data = plotdat, aes(x = gridmean, y = est), 
+                              size = 2)
+    }
+  }
   if(plotrug){
     if(is.null(rugvalues)) stop(paste0(
       "If plotrug is TRUE, a vector of treatment values to be rug plotted ",
       "along the x-axis must be provided as the argument 'rugvalues'."))
     rugdat <- data.frame(treat = rugvalues)
     gg1 <- gg1 + geom_rug(data = rugdat, aes(x = treat))
+  }
+  if(!fixctrl && addstep){
+    ld <- reshape2::melt(plotdat[, c("control.value", "treat.value", "est")], 
+                         id.vars = "est")
+    gg1 <- gg1 + geom_line(data = ld, aes(x = value, y = est, group = est)) + 
+      geom_line(data = ld, aes(x = value, y = est, group = value))
   }
   return(gg1)
 }

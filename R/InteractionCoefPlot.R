@@ -82,7 +82,8 @@
 #' exlm <- lm(y ~ X1 * X2 + X3 + X4 + X5, exdat)
 #' explot <- InteractionCoefPlot(exlm, exdat, "X1", "X2", addpvallab=T, 
 #' shadebysig=T, robust=F, otherix=T)
-#' cowplot::plot_grid(explot$MainGGplot, explot$OtherGGplot, ncol=1)
+#' if(require(cowplot)){
+#' cowplot::plot_grid(explot$MainGGplot, explot$OtherGGplot, ncol=1)}
 #' 
 
 InteractionCoefPlot <- function(model, data, pred, ixterm, multiplier = 1, 

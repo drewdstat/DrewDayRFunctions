@@ -739,7 +739,7 @@ getcombos <- function(x, y = NULL, r = 2){
         ycomb <- "No combos"
         xycomb <- xcomb} else {
         ycomb <- sapply(tmp2, function(ww) paste(ww, collapse = "|"))
-        if(length(xcomb) ==1 && xcomb == "No combos"){
+        if(length(xcomb) == 1 && xcomb == "No combos"){
           xycomb <- ycomb
         } else {
           xycomb <- expand.grid(X = xcomb, Y = ycomb)
@@ -778,27 +778,395 @@ findexampledata <- function(path = NULL){
   }
 }
 
+#Get model coefficients & CIs from a glm, lm, or logistf
+getmodelcoefs <- function(mod, pred = NULL, ixterm = NULL, robust = T, 
+                          HCtype = "HC0", usedf = F){
+  if(any("list" %in% class(mod)) | any("mira" %in% class(mod))){
+    modcoef <- summary(mice::pool(mod), conf.int = T)
+    rownames(modcoef) <- modcoef$term
+    if(ncol(modcoef) == 10) modcoef <- modcoef[, -grep("\\%", names(modcoef))]
+    modcoef <- modcoef[, -which(names(modcoef) %in% c("term", "df"))]
+    modcoef <- as.matrix(modcoef)
+    colnames(modcoef) <- c("Coefficient", "SE", "statistic", "p-value", 
+                           "LCI", "UCI")
+  } else if(any(c("lm", "glm") %in% class(mod))){
+    if(robust){
+      modcoef <- robustse(mod, HCtype, usedf)
+    } else {
+      modcoef <- summary(mod)$coef
+      modcis <- suppressMessages(confint(mod))
+      modcoef <- cbind(modcoef, modcis)
+    }
+    colnames(modcoef) <- c("Coefficient", "SE", "statistic", "p-value", 
+                           "LCI", "UCI")
+  } else if(class(mod) == "logistf"){
+    modcoef <- cbind(fit$coefficients, sqrt(diag(fit$var)), fit$prob, 
+                     fit$ci.lower, fit$ci.upper)
+    colnames(modcoef) <- c("Coefficient", "SE", "p-value", "LCI", "UCI")
+    rownames(modcoef) <- fit$terms
+  } else {
+    stop(paste0("'mod' must be of class 'glm', 'lm', or 'logistf'."))
+  }
+  
+  if(!is.null(pred) & is.null(ixterm)){
+    modcoef <- modcoef[grep(pred, rownames(modcoef)), ]
+    if(!is.matrix(modcoef)){
+      tmp <- matrix(modcoef, nrow = 1)
+      colnames(tmp) <- names(modcoef)
+      rownames(tmp) <- pred
+      modcoef <- tmp
+    }
+  } else if(is.null(pred) & !is.null(ixterm)){
+    modcoef <- modcoef[grep(ixterm, rownames(modcoef)), ]
+  } else if(!is.null(pred) & !is.null(ixterm)){
+    modcoef <- modcoef[grep(paste(pred, ixterm, sep = "|"), 
+                            rownames(modcoef)), ]
+    modcoef1 <- modcoef[which(!grepl("\\:", rownames(modcoef))), ]
+    modcoef2 <- modcoef[grep("\\:", rownames(modcoef)), ]
+    ixrowlabs <- rownames(modcoef2)[grep(paste0("\\:", ixterm), 
+                                         rownames(modcoef2))]
+    modcoef2 <- modcoef2[grep(paste0("\\:", ixterm), rownames(modcoef2)), ]
+    if(!is.matrix(modcoef2)){
+      modcoef2 <- matrix(modcoef2, nrow = 1)
+      colnames(modcoef2) <- colnames(modcoef)
+      rownames(modcoef2) <- ixrowlabs
+    }
+    modcoef <- rbind(modcoef1, modcoef2)
+  }
+  return(modcoef)
+}
+
+#Escape all regex-active characters in a string
+escapespecialchars <- function(x, specialchar = "^$&=.?*|+-()[]{}/%!"){
+  specialchar <- strsplit(specialchar, split = "")[[1]]
+  for(i in specialchar) x <- gsub(i, paste0("\\", i), x, fixed = T)
+  return(x)
+}
+
+#Determine if variables are continuous, binary, or count data
+getvartype <- function(out, Data, integerascount = F){
+  if(integerascount && is.integer(Data[, out])) "count" else if(
+    length(unique(Data[which(!is.na(Data[, out]) & 
+                             !is.nan(Data[, out])), out])) == 2) "binary" else 
+                               "continuous"
+}
+
+#Rerun a model omitting observations above a certain Cook's distance threshold
+# That threshold is either a specific value 'leverage.cutoff', a certain 
+# multiplier above the mean Cook's distance 'leverage.meancutoff', or 4 times 
+# the mean Cook's distance if both of the former are NULL.
+omithighcooks <- function(mod, mice = F, leverage.cutoff = 0.2, 
+                          leverage.meancutoff = NULL){
+  if(mice){
+    if(class(mod) == "mira") mod <- mod$analyses
+    for(mim in 1:length(mod)){
+      cooks <- cooks.distance(mod[[mim]])
+      if(!is.null(leverage.cutoff)){
+        threshold <- leverage.cutoff
+      } else if(!is.null(leverage.meancutoff)){
+        threshold <- mean(cooks, na.rm = T) * leverage.meancutoff
+      } else {threshold <- mean(cooks, na.rm = T) * 4}
+      if(any(class(mod[[mim]]) == "negbin")){
+        mod[[mim]] <- glm.nb(formula(mod[[mim]]), data = mod[[mim]]$model[-c(
+          as.numeric(names(cooks[which(cooks > threshold)]))), ], 
+          na.action = na.exclude)
+      } else if(any(class(mod[[mim]]) == "glm")){
+        mod[[mim]] <- glm(formula(mod[[mim]]), data = mod[[mim]]$model[-c(
+          as.numeric(names(cooks[which(cooks > threshold)]))), ], 
+          family = mod[[mim]]$family, na.action = na.exclude)
+      } else if(any(class(mod[[mim]]) == "lm")){
+        mod[[mim]] <- lm(formula(mod[[mim]]), data = mod[[mim]]$model[-c(
+          as.numeric(names(cooks[which(cooks > threshold)]))), ], 
+          na.action = na.exclude)
+      } else {
+        stop(paste0("A list of unknown model types was provided for the",
+                    " argument 'mod'."))
+      }
+    }
+  } else {
+    cooks <- cooks.distance(lm1)
+    if(!is.null(leverage.cutoff)){
+      threshold <- leverage.cutoff
+    } else if(!is.null(leverage.meancutoff)){
+      threshold <- mean(cooks, na.rm = T) * leverage.meancutoff
+    } else {threshold <- mean(cooks, na.rm = T) * 4}
+    if(any(class(mod) == "negbin")){
+      mod <- glm.nb(formula(mod), data = mod$model[-c(
+        as.numeric(names(cooks[which(cooks > threshold)]))), ], 
+        na.action = na.exclude)
+    } else if(any(class(mod) == "glm")){
+      mod <- glm(formula(mod), data = mod$model[-c(
+        as.numeric(names(cooks[which(cooks > threshold)]))), ], 
+        family = mod$family, na.action = na.exclude)
+    } else if(any(class(mod) == "lm")){
+      mod <- lm(formula(mod), data = mod$model[-c(
+        as.numeric(names(cooks[which(cooks > threshold)]))), ], 
+        na.action = na.exclude)
+    } else {
+      stop("An unknown model type was provided for the argument 'mod'.")
+    }
+  }
+  return(mod)
+}
+
+#Run a new model of type 'lm', 'glm', 'glm.nb', 'logistf', or a MICE list of 
+# models of any of the first 3 types
+getnewmod <- function(mod, newData, miceFlag = F){
+  if(miceFlag){
+    if(any("mira" %in% class(mod))){
+      exmod <- mod$analyses[[1]]
+    } else exmod <- mod[[1]]
+    if(any(class(exmod) == "negbin")){
+      newmod <- lapply(newData, function(x) MASS::glm.nb(
+        formula(exmod), data = x, na.action = na.exclude))
+    } else if(any(class(exmod) == "glm")){
+      newmod <- lapply(newData, function(x) glm(
+        formula(exmod), data = x, family = family(exmod), 
+        na.action = na.exclude))
+    } else {
+      newmod <- lapply(newData, function(x) lm(
+        formula(exmod), data = x, na.action = na.exclude))
+    }
+  } else if(any(class(mod) == "negbin")){
+    newmod <- MASS::glm.nb(formula(mod), data = newData, na.action = na.exclude)
+  } else if(any(class(mod) == "glm")){
+    newmod <- glm(formula(mod), data = newData,
+                  family = mod$family, na.action = na.exclude)
+  } else if(class(mod) == "logistf"){
+    newmod <- logistf(mod$formula, data = newData, na.action = na.exclude)
+  } else {
+    newmod <- lm(formula(mod), data = newData, na.action = na.exclude)
+  }
+  return(newmod)
+}
+
+# A function for adding extra left margin to a plot so that angled x-axis text 
+# is not cut off on the left side of the plot.
+margin_spacer <- function(x) {
+  # x is the column in your dataset
+  left_length <- nchar(levels(factor(x)))[1]
+  if (left_length > 8) return((left_length - 8) * 4)
+  else return(0)
+}
+
+# A function for creating a plot specifically based on the Resultsmat table 
+# internally produced in the GLMResults function.
+GLMResults_plot <- function(Resultsmat, horint = 0, facetcol = NULL, 
+                            yl = "Coefficient", colorbypred = T, 
+                            colorpal = NULL, log10yaxis = F, 
+                            Predtitle = "Exposure"){
+  if(any(grepl("\\:", Resultsmat$Variable))){
+    exmarg <- Resultsmat[grep("\\|", Resultsmat$Variable), "Variable"][1]
+    ixterm <- gsub(".*\\|", "", exmarg)
+    ixterm <- gsub(" \\=.*", "", ixterm)
+    ixcontrasts <- Resultsmat[grep("\\:", Resultsmat$Variable), "Variable"]
+    if(any(grepl(paste0(ixterm, " \\("), ixcontrasts))){
+      ixcontrasts <- unique(gsub(paste0(".*", ixterm, " "), "", ixcontrasts))
+    } else ixcontrasts <- ixterm
+  } else ixterm <- NULL
+  
+  if(is.null(facetcol)){
+    facetcol <- length(unique(Resultsmat$Outcome))
+  }
+  if(!is.null(ixterm) & length(ixcontrasts) > 1){
+    plotData <- Resultsmat[grep("|", Resultsmat$Variable, fixed = T), ]
+    plotData$Interaction_Level <- gsub(".*[|]", "", plotData$Variable)
+    plotData$Interaction_Level <- factor(
+      plotData$Interaction_Level, levels = unique(
+        plotData$Interaction_Level))
+    plotData$Marginal_Level <- gsub("[|].*", "", plotData$Variable)
+    plotData$Marginal_Level <- factor(
+      plotData$Marginal_Level, levels = unique(
+        plotData$Marginal_Level))
+    plotData$star <- ifelse(plotData$Significant == "Yes", "*", "")
+    plotData.ix <- Resultsmat[grep(":", Resultsmat$Variable, fixed = T), ]
+    plotData.ix$Interaction_Level <- gsub(".*[:]", "", plotData.ix$Variable)
+    plotData.ix$Interaction_Level <- factor(
+      plotData.ix$Interaction_Level, levels = unique(
+        plotData.ix$Interaction_Level))
+    plotData.ix$Marginal_Level <- gsub("[:].*", "", plotData.ix$Variable)
+    plotData.ix$Marginal_Level <- factor(
+      plotData.ix$Marginal_Level, levels = unique(
+        plotData.ix$Marginal_Level))
+    plotData.ix$star <- ifelse(plotData.ix$Significant == "Yes", "*", "")
+  } else if(!is.null(ixterm)) {
+    plotData <- Resultsmat[-grep(":", Resultsmat$Variable, fixed = T), ]
+    plotData$Interaction_Level <- plotData$Variable
+    plotData$star <- ifelse(plotData$Significant == "Yes", "*", "")
+    plotData.ix <- Resultsmat[grep(":", Resultsmat$Variable, fixed = T), ]
+    plotData.ix$Interaction_Level <- plotData.ix$Variable
+    plotData.ix$star <- ifelse(plotData.ix$Significant == "Yes", "*", "")
+  } else {
+    plotData <- Resultsmat
+    plotData$star <- ifelse(plotData$Significant == "Yes", "*", "")
+  }
+  
+  plotData$Outcome <- factor(plotData$Outcome, 
+                             levels = unique(plotData$Outcome))
+  plotData$Predictor <- factor(plotData$Predictor, 
+                             levels = unique(plotData$Predictor))
+  plotData$Variable <- factor(plotData$Variable, 
+                              levels = unique(plotData$Variable))
+  
+  if(!"TransCoef" %in% names(Resultsmat)){
+    plotData[, paste0("Trans", c("Coef", "LCI", "UCI"))] <- 
+      plotData[, c("Coefficient", "LCI", "UCI")]
+  }
+  if(!is.null(ixterm)){
+    if(!"TransCoef" %in% names(Resultsmat)){
+      plotData.ix[, paste0("Trans", c("Coef", "LCI", "UCI"))] <- 
+        plotData.ix[, c("Coefficient", "LCI", "UCI")]
+    }
+    plotData.ix$Outcome <- factor(plotData.ix$Outcome, 
+                               levels = unique(plotData.ix$Outcome))
+    plotData.ix$Predictor <- factor(plotData.ix$Predictor, 
+                                 levels = unique(plotData.ix$Predictor))
+    plotData.ix$Variable <- factor(plotData.ix$Variable, 
+                                levels = unique(plotData.ix$Variable))
+  }
+  
+  if(is.null(ixterm)){
+    gg1 <- ggplot(data = plotData, aes(x = Variable, y = TransCoef)) + 
+      geom_errorbar(aes(ymin = TransLCI, ymax = TransUCI), 
+                    width = 0.4, linewidth = 1) + 
+      geom_point(size = 2) + geom_hline(aes(yintercept = horint)) + 
+      geom_text(aes(y = TransUCI, vjust =  - 0.5, 
+                    label = star), show.legend = F, size = 6) + 
+      facet_wrap(~Outcome, scales = "free", ncol = facetcol) + 
+      ylab(yl) + xlab(paste0(Predtitle)) + theme_bw() + 
+      theme(axis.text.x = element_text(angle = 45, hjust = 1), 
+            plot.margin = margin(l = 0 + margin_spacer(plotData$Variable)), 
+            legend.position = "bottom")
+    if(colorbypred){
+      gg1 <- gg1 + aes(color = Predictor) + 
+        guides(col = guide_legend(title = Predtitle))
+      if(!is.null(colorpal)) gg1 <- 
+          gg1 + scale_color_manual(values = colorpal(length(prednames)))
+    }
+    if(log10yaxis) gg1 <- gg1 + scale_y_log10(
+      breaks = scales::trans_breaks("log10", function(x) 10^x),
+      labels = scales::trans_format("log10", math_format(10^.x)))
+  } else {
+    if(length(ixcontrasts) > 1){
+      gg1 <- ggplot(data = plotData, aes(x = Marginal_Level, y = TransCoef, 
+                                         color = Interaction_Level)) + 
+        geom_errorbar(aes(ymin = TransLCI, ymax = TransUCI), 
+                      width = 0.4, linewidth = 1, position = position_dodge(0.75)) + 
+        geom_point(position = position_dodge(0.75), size = 2) + 
+        geom_hline(aes(yintercept = horint)) + theme_bw() + 
+        geom_text(aes(y = TransUCI, label = star), vjust =  - 0.5, 
+                  position = position_dodge(0.75), show.legend = F, size = 6) + 
+        facet_wrap(~ Outcome, scales = "free", ncol = facetcol) + 
+        ylab(yl) + xlab(paste0(Predtitle)) + 
+        ggtitle("Marginal Coefficients") + 
+        guides(col = guide_legend(title = "Interaction Level")) + 
+        theme(axis.text.x = element_text(angle = 45, hjust = 1), 
+              plot.margin = margin(l = 0 + margin_spacer(plotData$Variable)), 
+              legend.position  =  "bottom", 
+              plot.title = element_text(hjust = 0.5))
+      if(!is.null(colorpal)) gg1 <- gg1 + scale_color_manual(
+        values = colorpal(length(unique(plotData$Interaction_Level))))
+      if(log10yaxis) gg1 <- gg1 + scale_y_log10(
+        breaks = scales::trans_breaks("log10", function(x) 10^x),
+        labels = scales::trans_format("log10", math_format(10^.x)))
+      if(length(unique(plotData.ix$Interaction_Level)) > 1){
+        gg2 <- ggplot(data = plotData.ix, aes(
+          x = Marginal_Level, y = TransCoef, color = Interaction_Level)) + 
+          geom_errorbar(aes(ymin = TransLCI, ymax = TransUCI), width = 0.4, 
+                        linewidth = 1, position = position_dodge(0.75)) + 
+          geom_point(position = position_dodge(0.75), size = 2) + 
+          geom_hline(aes(yintercept = horint)) + theme_bw() + 
+          geom_text(aes(y = TransUCI, label = star), vjust =  -0.5, 
+                    position = position_dodge(0.75), show.legend = F, size = 6) + 
+          facet_wrap(~ Outcome, scales = "free", ncol = facetcol) + 
+          ylab(yl) + xlab(paste0(Predtitle)) + 
+          guides(col = guide_legend(title = "Interaction Level")) + 
+          ggtitle("Interaction Coefficients") + 
+          theme(axis.text.x = element_text(angle = 45, hjust = 1), 
+                legend.position  =  "bottom", 
+                plot.margin = margin(l = 0 + margin_spacer(plotData$Variable)), 
+                plot.title = element_text(hjust = 0.5))
+        if(!is.null(colorpal)) gg2 <- gg2 + scale_color_manual(
+          values = colorpal(length(unique(plotData.ix$Interaction_Level))))
+      } else {
+        gg2 <- ggplot(data = plotData.ix, aes(
+          x = Marginal_Level, y = TransCoef)) + 
+          geom_errorbar(aes(ymin = TransLCI, ymax = TransUCI), width = 0.4, 
+                        linewidth = 1, position = position_dodge(0.75)) + 
+          geom_point(position = position_dodge(0.75), size = 2) + 
+          geom_hline(aes(yintercept = horint)) + theme_bw() +
+          geom_text(aes(y = TransUCI, label = star), vjust =  -0.5, 
+                    position = position_dodge(0.75), show.legend = F, size = 6) + 
+          facet_wrap(~ Outcome, scales = "free", ncol = facetcol) + 
+          ylab(yl) + xlab(paste0(Predtitle)) + 
+          ggtitle("Interaction Coefficients") + 
+          theme(axis.text.x = element_text(angle = 45, hjust = 1), 
+                legend.position = "bottom", 
+                plot.margin = margin(l = 0 + margin_spacer(plotData$Variable)), 
+                plot.title = element_text(hjust = 0.5))
+        if(colorbypred){
+          gg2 <- gg2 + aes(color = Predictor) + 
+            guides(col = guide_legend(title = Predtitle)) 
+          if(!is.null(colorpal)) gg2 <- 
+              gg2 + scale_color_manual(values = colorpal(length(prednames)))
+        }
+      }
+      if(log10yaxis) gg2 <- gg2 + scale_y_log10(
+        breaks = scales::trans_breaks("log10", function(x) 10^x),
+        labels = scales::trans_format("log10", math_format(10^.x)))
+      gg1 <- list(Marginal = gg1, Interaction = gg2)
+    } else {
+      gg1 <- ggplot(data = plotData.ix, 
+                    aes(x = Variable, y = TransCoef)) + 
+        geom_errorbar(aes(ymin = TransLCI, ymax = TransUCI), 
+                      width = 0.4, linewidth = 1) + 
+        geom_point(size = 2) + geom_hline(aes(yintercept = horint)) + 
+        geom_text(aes(y = TransUCI, label = star), vjust =  -0.5, 
+                  show.legend = F, size = 6) + theme_bw() +
+        facet_wrap(~ Outcome, scales = "free", ncol = facetcol) + 
+        ylab(yl) + xlab(paste0(Predtitle)) + 
+        ggtitle("Interaction Coefficients") + 
+        theme(axis.text.x = element_text(angle = 45, hjust = 1), 
+              legend.position = "bottom", 
+              plot.margin = margin(l = 0 + margin_spacer(plotData$Variable)), 
+              plot.title = element_text(hjust = 0.5))
+      if(colorbypred){
+        gg1 <- gg1 + aes(color = Predictor) + 
+          guides(col = guide_legend(title = Predtitle))
+        if(!is.null(colorpal)) gg1 <- 
+            gg1 + scale_color_manual(values = colorpal(length(prednames)))
+      }
+      if(log10yaxis) gg1 <- gg1 + scale_y_log10(
+        breaks = scales::trans_breaks("log10", function(x) 10^x),
+        labels = scales::trans_format("log10", math_format(10^.x)))
+    }
+  }
+  return(gg1)
+}
+
+
 #The following rewrites ggalt::stat_xspline so that you don't have to download 
 # that package's annoying proj4 dependency, which can cause download errors. 
 stat_xspline <- function (mapping = NULL, data = NULL, geom = "line", 
                           position = "identity", na.rm = TRUE, show.legend = NA, 
                           inherit.aes = TRUE, spline_shape = -0.25, 
                           open = TRUE, rep_ends = TRUE, ...){
-  layer(stat = StatXspline, data = data, mapping = mapping, 
+  ggplot2::layer(stat = StatXspline, data = data, mapping = mapping, 
         geom = geom, position = position, show.legend = show.legend, 
         inherit.aes = inherit.aes, params = list(
           spline_shape = spline_shape, open = open, na.rm = na.rm, 
           rep_ends = rep_ends, ...))
 }
-StatXspline <- ggproto("StatXspline", Stat, required_aes = c("x", "y"),
+StatXspline <- ggplot2::ggproto("StatXspline", Stat, required_aes = c("x", "y"),
                        compute_group = function(self, data, scales, params,
                                                 spline_shape=-0.25, open=TRUE, 
                                                 rep_ends=TRUE) {
                          tf <- tempfile(fileext=".png")
                          png(tf)
                          plot.new()
-                         tmp <- graphics::xspline(data$x, data$y, spline_shape, open, 
-                                        rep_ends, draw=FALSE, NA, NA)
+                         tmp <- graphics::xspline(
+                           data$x, data$y, spline_shape, open, 
+                           rep_ends, draw=FALSE, NA, NA)
                          invisible(dev.off())
                          unlink(tf)
                          data.frame(x=tmp$x, y=tmp$y)
@@ -807,7 +1175,7 @@ geom_xspline <- function(mapping = NULL, data = NULL, stat = "xspline",
                          position = "identity", na.rm = TRUE, show.legend = NA,
                          inherit.aes = TRUE,
                          spline_shape=-0.25, open=TRUE, rep_ends=TRUE, ...) {
-  layer(geom = GeomXspline,
+  ggplot2::layer(geom = GeomXspline,
     mapping = mapping,
     data = data,
     stat = stat,
@@ -822,6 +1190,6 @@ geom_xspline <- function(mapping = NULL, data = NULL, stat = "xspline",
       ...)
   )
 }
-GeomXspline <- ggproto("GeomXspline", GeomLine, required_aes = c("x", "y"),
-                       default_aes = aes(colour = "black", linewidth = 0.5, 
-                                         linetype = 1, alpha = NA))
+GeomXspline <- ggplot2::ggproto("GeomXspline", GeomLine, required_aes = c(
+  "x", "y"), default_aes = aes(colour = "black", linewidth = 0.5, 
+                               linetype = 1, alpha = NA))
