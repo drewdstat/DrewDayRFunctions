@@ -951,7 +951,7 @@ margin_spacer <- function(x) {
   # x is the column in your dataset
   left_length <- nchar(levels(factor(x)))[1]
   if (left_length > 8) return((left_length - 8) * 4)
-  else return(0)
+  else return(5.5)
 }
 
 #color names to hexadecimal colors
@@ -1057,7 +1057,8 @@ GLMResults_plot <- function(Resultsmat, horint = 0, facetcol = NULL,
       facet_wrap(~Outcome, scales = "free", ncol = facetcol) + 
       ylab(yl) + xlab(paste0(Predtitle)) + theme_bw() + 
       theme(axis.text.x = element_text(angle = 45, hjust = 1), 
-            plot.margin = margin(l = 0 + margin_spacer(plotData$Variable)), 
+            plot.margin = margin(l = 0 + margin_spacer(plotData$Variable), 
+                                 b=5.5, t=5.5, r=5.5), 
             legend.position = "bottom")
     if(colorbypred){
       gg1 <- gg1 + aes(color = Predictor) + 
@@ -1083,7 +1084,8 @@ GLMResults_plot <- function(Resultsmat, horint = 0, facetcol = NULL,
         ggtitle("Marginal Coefficients") + 
         guides(col = guide_legend(title = "Interaction Level")) + 
         theme(axis.text.x = element_text(angle = 45, hjust = 1), 
-              plot.margin = margin(l = 0 + margin_spacer(plotData$Variable)), 
+              plot.margin = margin(l = 0 + margin_spacer(plotData$Variable), 
+                                   b=5.5, t=5.5, r=5.5), 
               legend.position  =  "bottom", 
               plot.title = element_text(hjust = 0.5))
       if(!is.null(colorpal)) gg1 <- gg1 + scale_color_manual(
@@ -1106,7 +1108,8 @@ GLMResults_plot <- function(Resultsmat, horint = 0, facetcol = NULL,
           ggtitle("Interaction Coefficients") + 
           theme(axis.text.x = element_text(angle = 45, hjust = 1), 
                 legend.position  =  "bottom", 
-                plot.margin = margin(l = 0 + margin_spacer(plotData$Variable)), 
+                plot.margin = margin(l = 0 + margin_spacer(plotData$Variable), 
+                                     b=5.5, t=5.5, r=5.5), 
                 plot.title = element_text(hjust = 0.5))
         if(!is.null(colorpal)) gg2 <- gg2 + scale_color_manual(
           values = colorpal(length(unique(plotData.ix$Interaction_Level))))
@@ -1124,7 +1127,8 @@ GLMResults_plot <- function(Resultsmat, horint = 0, facetcol = NULL,
           ggtitle("Interaction Coefficients") + 
           theme(axis.text.x = element_text(angle = 45, hjust = 1), 
                 legend.position = "bottom", 
-                plot.margin = margin(l = 0 + margin_spacer(plotData$Variable)), 
+                plot.margin = margin(l = 0 + margin_spacer(plotData$Variable), 
+                                     b=5.5, t=5.5, r=5.5), 
                 plot.title = element_text(hjust = 0.5))
         if(colorbypred){
           gg2 <- gg2 + aes(color = Predictor) + 
@@ -1150,7 +1154,8 @@ GLMResults_plot <- function(Resultsmat, horint = 0, facetcol = NULL,
         ggtitle("Interaction Coefficients") + 
         theme(axis.text.x = element_text(angle = 45, hjust = 1), 
               legend.position = "bottom", 
-              plot.margin = margin(l = 0 + margin_spacer(plotData$Variable)), 
+              plot.margin = margin(l = 0 + margin_spacer(plotData$Variable), 
+                                   b=5.5, t=5.5, r=5.5), 
               plot.title = element_text(hjust = 0.5))
       if(colorbypred){
         gg1 <- gg1 + aes(color = Predictor) + 
