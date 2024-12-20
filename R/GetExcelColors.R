@@ -66,6 +66,7 @@
 #' replace the leading 2 "FF" characters with "#" (e.g., FF00CD66 -> #00CD66). 
 #' 
 #' @import ggplot2 tidyxl readxl
+#' @importFrom tidyr spread
 #' @export GetExcelColors
 #' 
 #' @examples 
@@ -108,7 +109,7 @@ GetExcelColors <- function(filepath, sheet = 1, skip = 0, skiprows = NULL,
     xlsx_cells(filepath, sheets = sheet) %>%
     mutate(fill_color = fill_colors[local_format_id]) %>%
     dplyr::select(row, col, fill_color) %>%
-    spread(col, fill_color) 
+    tidyr::spread(col, fill_color) 
   if(skip != 0) fills <- fills[which(fills$row > skip), ]
   if(!is.null(skiprows)) fills <- fills[which(!fills$row %in% (skiprows - 1)), ]
   if(!include_row1_colors) fills <- fills[-1, ]
