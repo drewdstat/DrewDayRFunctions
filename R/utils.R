@@ -1033,11 +1033,21 @@ GLMResults_plot <- function(Resultsmat, horint = 0, facetcol = NULL,
   if(!"TransCoef" %in% names(Resultsmat)){
     plotData[, paste0("Trans", c("Coef", "LCI", "UCI"))] <- 
       plotData[, c("Coefficient", "LCI", "UCI")]
+  } else if(any(is.na(plotData$TransCoef))){
+    plotData[which(is.na(plotData$TransCoef)), paste0(
+      "Trans", c("Coef", "LCI", "UCI"))] <- 
+      plotData[which(is.na(plotData$TransCoef)), 
+               c("Coefficient", "LCI", "UCI")]
   }
   if(!is.null(ixterm)){
     if(!"TransCoef" %in% names(Resultsmat)){
       plotData.ix[, paste0("Trans", c("Coef", "LCI", "UCI"))] <- 
         plotData.ix[, c("Coefficient", "LCI", "UCI")]
+    } else if(any(is.na(plotData.ix$TransCoef))){
+      plotData.ix[which(is.na(plotData.ix$TransCoef)), paste0(
+        "Trans", c("Coef", "LCI", "UCI"))] <- 
+        plotData.ix[which(is.na(plotData.ix$TransCoef)), 
+                 c("Coefficient", "LCI", "UCI")]
     }
     plotData.ix$Outcome <- factor(plotData.ix$Outcome, 
                                levels = unique(plotData.ix$Outcome))
