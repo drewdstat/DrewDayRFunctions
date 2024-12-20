@@ -401,7 +401,7 @@ extradiag = T)
                    
 # Visualize continuous * continuous interaction
 interact.plot <- DrewDayRFunctions::InteractionCoefPlot(
-glmres$LMlist$`anyspont~age`, infert, "age", "parity", 
+glmres$ModelList$`anyspont~age`, infert, "age", "parity", 
 addpvallab = T, shadebysig = T)
 interact.plot$GGplot
 
@@ -414,16 +414,20 @@ glmres <- GLMResults(carpreds[-1], c("vs", "am"), c("gear", "carb"), mtcars,
 glmres$GGplot
 
 # Mix of continuous outcomes, binary outcomes with logistic GLMs, 
-# and count outcomes with negative binomial GLMs, all with continuous and 
+# and count outcomes with Poisson GLMs, all with continuous and 
 # categorical predictors and a categorical interaction term.
 infert$parity <- as.integer(infert$parity)
 set.seed(6)
 infert$contout <- infert$age * 0.1 + rnorm(nrow(infert))
 glmres <- GLMResults(c("age", "induced"), c("parity", "anyspont", "contout"), 
-NULL, infert, ixterm = "education", countfam = "negbin", integerascount = T, 
+NULL, infert, ixterm = "education", integerascount = T, 
 extradiag = F, coeftrans_binom = NULL, altprednames  =  c("Age", "Induced"), 
 altoutnames  =  c("Parity", "Spontaneous", "Continuous Outcome"), 
 altixname  =  "Education")
+# Note that extradiag = F to avoid a small increase in run time for this 
+# example. Also, coeftrans_binom = NULL to show coefficients on the log 
+# scale so that they are more easily visible in the plot.
+
 if(require(cowplot)){
 plotlist <- lapply(glmres$GGplot, 
 function(x) cowplot::plot_grid(plotlist = x, nrow = 1))
