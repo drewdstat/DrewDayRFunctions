@@ -1052,8 +1052,8 @@ GLMResults_plot <- function(Resultsmat, horint = 0, facetcol = NULL,
       geom_errorbar(aes(ymin = TransLCI, ymax = TransUCI), 
                     width = 0.4, linewidth = 1) + 
       geom_point(size = 2) + geom_hline(aes(yintercept = horint)) + 
-      geom_text(aes(y = TransUCI, vjust =  -0.1, 
-                    label = star), show.legend = F, size = 6) + 
+      geom_text(aes(y = TransUCI, label = star), vjust = -0.05, 
+                show.legend = F, size = 6) + 
       facet_wrap(~Outcome, scales = "free", ncol = facetcol) + 
       ylab(yl) + xlab(paste0(Predtitle)) + theme_bw() + 
       theme(axis.text.x = element_text(angle = 45, hjust = 1), 
@@ -1077,7 +1077,7 @@ GLMResults_plot <- function(Resultsmat, horint = 0, facetcol = NULL,
                       width = 0.4, linewidth = 1, position = position_dodge(0.75)) + 
         geom_point(position = position_dodge(0.75), size = 2) + 
         geom_hline(aes(yintercept = horint)) + theme_bw() + 
-        geom_text(aes(y = TransUCI, label = star), vjust = -0.1, 
+        geom_text(aes(y = TransUCI, label = star), vjust = -0.05, 
                   position = position_dodge(0.75), show.legend = F, size = 6) + 
         facet_wrap(~ Outcome, scales = "free", ncol = facetcol) + 
         ylab(yl) + xlab(paste0(Predtitle)) + 
@@ -1100,7 +1100,7 @@ GLMResults_plot <- function(Resultsmat, horint = 0, facetcol = NULL,
                         linewidth = 1, position = position_dodge(0.75)) + 
           geom_point(position = position_dodge(0.75), size = 2) + 
           geom_hline(aes(yintercept = horint)) + theme_bw() + 
-          geom_text(aes(y = TransUCI, label = star), vjust =  -0.1, 
+          geom_text(aes(y = TransUCI, label = star), vjust = -0.05, 
                     position = position_dodge(0.75), show.legend = F, size = 6) + 
           facet_wrap(~ Outcome, scales = "free", ncol = facetcol) + 
           ylab(yl) + xlab(paste0(Predtitle)) + 
@@ -1120,7 +1120,7 @@ GLMResults_plot <- function(Resultsmat, horint = 0, facetcol = NULL,
                         linewidth = 1, position = position_dodge(0.75)) + 
           geom_point(position = position_dodge(0.75), size = 2) + 
           geom_hline(aes(yintercept = horint)) + theme_bw() +
-          geom_text(aes(y = TransUCI, label = star), vjust =  -0.1, 
+          geom_text(aes(y = TransUCI, label = star), vjust = -0.05, 
                     position = position_dodge(0.75), show.legend = F, size = 6) + 
           facet_wrap(~ Outcome, scales = "free", ncol = facetcol) + 
           ylab(yl) + xlab(paste0(Predtitle)) + 
@@ -1147,7 +1147,7 @@ GLMResults_plot <- function(Resultsmat, horint = 0, facetcol = NULL,
         geom_errorbar(aes(ymin = TransLCI, ymax = TransUCI), 
                       width = 0.4, linewidth = 1) + 
         geom_point(size = 2) + geom_hline(aes(yintercept = horint)) + 
-        geom_text(aes(y = TransUCI, label = star), vjust =  -0.1, 
+        geom_text(aes(y = TransUCI, label = star), vjust = -0.05, 
                   show.legend = F, size = 6) + theme_bw() +
         facet_wrap(~ Outcome, scales = "free", ncol = facetcol) + 
         ylab(yl) + xlab(paste0(Predtitle)) + 
