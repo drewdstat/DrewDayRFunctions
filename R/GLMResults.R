@@ -272,7 +272,7 @@
 #' \item{GGplot}{A forest ggplot of all predictor of interest coefficients and 
 #' confidence intervals or a list of those ggplots.} 
 #' 
-#' @import caret lmtest sandwich logistf splines ggplot2 DHARMa pbapply cowplot
+#' @import caret lmtest sandwich logistf splines ggplot2 DHARMa pbapply cowplot mice
 #' @importFrom purrr map
 #' @importFrom MASS glm.nb
 #' 
@@ -862,10 +862,11 @@ GLMResults <- function(prednames, outnames, covnames = NULL, Data, logout = F,
     } #end j loop
   } #end i loop
   
-  
+  #Renaming with alternative names
   Resultsmat$Significant <- ifelse(Resultsmat$'p-value' < 0.05, "Yes", "")
   Resultsmat[, 1] <- factor(Resultsmat[, 1], levels = outnames)
-  if(!is.null(altoutnames)) levels(Resultsmat[, 1]) <- altoutnames
+  if(!is.null(altoutnames)){levels(Resultsmat[, 1]) <- altoutnames
+  finaloutnames <- altoutnames} else finaloutnames <- outnames
   Resultsmat[, 2] <- factor(Resultsmat[, 2], levels = prednames)
   if(!is.null(altprednames)){
     levels(Resultsmat[, 2]) <- altprednames
@@ -898,7 +899,7 @@ GLMResults <- function(prednames, outnames, covnames = NULL, Data, logout = F,
     } else {
       retplotlist <- list()
       for(mm in unique(outtype)){
-        tmpplotdat <- Resultsmat[which(Resultsmat$Outcome %in% outnames[
+        tmpplotdat <- Resultsmat[which(Resultsmat$Outcome %in% finaloutnames[
           which(outtype == mm)]), ]
         if("TransCoef" %in% names(tmpplotdat) && all(
           is.na(tmpplotdat$TransCoef))){
