@@ -1318,7 +1318,7 @@ catpercviz <- function(Data, catvars = NULL, catvarnames = NULL, rowcutoff = 30)
 
 #This function produces an interactive plotly heatmap of correlations between 
 # all variables in a dataset, including continuous, binary, and polytomous
-allcorviz <- function(Data, colpalette = NULL){
+allcorviz <- function(corrdat, colpalette = NULL){
   if(is.null(colpalette)) colpalette <- colorRampPalette(c("red", "gray95", "blue"))
   if(any(sapply(corrdat, is.character))) corrdat[, sapply(corrdat, is.character)] <- 
       lapply(corrdat[, sapply(corrdat, is.character)], as.factor)
