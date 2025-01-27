@@ -18,19 +18,23 @@ if(!is.null(idvar) & !any(class(Data[, idvar]) %in% c("character", "factor"))){
   Data[, idvar] <- as.character(Data[, idvar])
 }
 
-contvars<-names(Data)[which(
-  sapply(Data,function(x) any(class(x)%in%c("numeric", "integer", "Date", 
-                                            "POSIXct", "POSIXlt")))
-)]
+contbool <- sapply(Data, function(x) any(class(x) %in% c(
+  "numeric", "integer", "Date", "POSIXct", "POSIXlt")))
+catbool <- sapply(Data, function(x) any(class(x) %in% c(
+  "factor", "character", "logical")))
+if(!any(contbool)) contpresent <- FALSE else contpresent <- TRUE
+if(!any(catbool)) catpresent <- FALSE else catpresent <- TRUE
 
-catvars<-names(Data)[which(
-  sapply(Data,function(x) any(class(x) %in% c("character", "factor")))
-)]
+if(contpresent){
+  contvars <- names(Data)[which(contbool)]
+  howhigh <- 5 + (((length(contvars) - 5)/5) * 3)
+}
 
-if(!is.null(idvar) & any(idvar %in% catvars)) 
+if(catpresent){
+  catvars <- names(Data)[which(catbool)]
+  if(!is.null(idvar) & any(idvar %in% catvars)) 
   catvars <- catvars[-which(catvars == idvar)]
-
-howhigh <- 5 + (((length(contvars) - 5)/5) * 3)
+}
 
 knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE, 
                       fig.align = "center", 
@@ -70,7 +74,7 @@ cat(paste0("There are ", length(unique(Data[, idvar])),
 ```{r dictdesc, eval = dictlogic, results = 'asis'}
 cat("## Data Dictionary
 
-The table below is a data dictionary containing column definitions.")
+The table below is a data dictionary containing column definitions. ")
 ```
 ```{r dicttable, eval = dictlogic}
 DT::datatable(Dict, caption = "Data Dictionary", 
@@ -81,13 +85,15 @@ DT::datatable(Dict, caption = "Data Dictionary",
   formatStyle(columns = colnames(Dict), fontSize = '12px')
 ```
 
-## Continuous Summary Statistics {.tabset}
+```{r conttabstart, eval = contpresent, results = 'asis'}
+cat("## Continuous Summary Statistics {.tabset}
 
-### Table
+### Table")
+```
 
-```{r conttable}
+```{r conttable, eval = contpresent}
 summ <- summtable_tt(contvars, Data)
-DT::datatable(summ, caption = "Continuous Covariate Summary Statistics", 
+DT::datatable(summ, caption = "Continuous Variable Summary Statistics", 
           rownames = F, options = list(pageLength = 10, rowsGroup = list(0), 
                                   initComplete  =  htmlwidgets::JS(
           "function(settings,  json) {", 
@@ -95,9 +101,11 @@ DT::datatable(summ, caption = "Continuous Covariate Summary Statistics",
   formatStyle(columns = colnames(summ), fontSize = '12px')
 ```
 
-### Boxplots
+```{r bplotheader, eval = contpresent, results = 'asis'}
+cat("### Boxplots")
+```
 
-```{r boxplots}
+```{r boxplots, eval = contpresent}
 bplist <- list()
 histlist <- list()
 for(i in contvars){
@@ -117,39 +125,59 @@ for(i in contvars){
 cowplot::plot_grid(plotlist = bplist, ncol = 5, align = "hv")
 ```
 
-### Histograms
+```{r histheader, eval = contpresent, results = 'asis'}
+cat("### Histograms")
+```
 
-```{r hists}
+```{r hists, eval = contpresent}
 cowplot::plot_grid(plotlist = histlist, ncol = 5, align = "hv")
 ```
 
-### Missingness
-
-```{r contmiss}
-misspercdt(Data[, contvars])
+```{r contmissheader, eval = contpresent, results = 'asis'}
+cat("### Missingness")
 ```
 
-## Categorical Summary Statistics {.tabset}
+```{r contmiss, eval = contpresent}
+if(length(contvars) == 1){
+  contdat <- as.data.frame(Data[, contvars])
+  names(contdat) <- contvars
+} else {
+  contdat <- Data[, contvars]
+}
+misspercdt(contdat)
+```
 
-### Table
+```{r cattabstart, eval = catpresent, results = 'asis'}
+cat("## Categorical Summary Statistics {.tabset}
 
-```{r cattable}
+### Table")
+```
+
+```{r cattable, eval = catpresent}
 cattab <- myvarcompsummary_cat_tab(catvars, Data, kable = FALSE)
 cattab$N <- as.integer(gsub("\\(.*", "", cattab[, 3]))
 cattab$Percent <- gsub(".*\\(", "", cattab[, 3])
 cattab$Percent <- as.numeric(gsub("\\%.*", "", cattab$Percent))
 cattab <- cattab[, -3]
 
-DT::datatable(cattab, rownames = FALSE) %>% 
+DT::datatable(cattab, rownames = FALSE, 
+              caption = "Categorical Variable Summary Statistics") %>% 
   formatStyle("Percent", background = styleColorBar(c(0, 100), 'lightblue'), 
               backgroundSize = '98% 88%', 
               backgroundRepeat = 'no-repeat', backgroundPosition = 'center')
 ```
 
-### Plot
 
-```{r catplot}
-catplot <- catpercviz(Data[, catvars])
+```{r catplotheader, eval = catpresent, results = 'asis'}
+cat("### Plot")
+```
+
+```{r catplot, eval = catpresent}
+if(length(catvars) == 1){
+  catdat <- as.data.frame(Data[, catvars])
+  names(catdat) <- catvars
+} else catdat <- Data[, catvars]
+catplot <- catpercviz(catdat)
 if(is.list(catplot) & length(catplot) > 1){
   for(i in 1:length(catplot)){
     cat("#### Subplots {.tabset} \n\n")
@@ -164,10 +192,16 @@ if(is.list(catplot) & length(catplot) > 1){
 }
 ```
 
-### Missingness
+```{r catmissheader, eval = catpresent, results = 'asis'}
+cat("### Missingness")
+```
 
-```{r catmiss}
-misspercdt(Data[, catvars])
+```{r catmiss, eval = catpresent}
+if(length(catvars) == 1){
+  catdat <- as.data.frame(Data[, catvars])
+  names(catdat) <- catvars
+} else catdat <- Data[, catvars]
+misspercdt(catdat)
 ```
 
 ## Overall Correlations
