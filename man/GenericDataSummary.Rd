@@ -16,7 +16,7 @@ GenericDataSummary(
 \item{filename}{A file name and path for the .html R Markdown document to be
 generated. Defaults to "DataSummary_X.html" where X is the system date and
 time when the document is saved. You can specify the ".html" suffix here or
-omit it, in which case it will be added for you.}
+omit it, in which case it will be added automatically.}
 
 \item{directory}{The folder in which you'd like to save the html document.
 This defaults to your current working directory.}
@@ -38,18 +38,30 @@ filename and directory.
 \description{
 \code{GenericDataSummary} creates a Markdown document for any dataset that
 separately summarizes continuous variables in that dataset with a summary
-table, boxplots, and histograms, as well as provides frequency counts for
-all categorical data. There is also an option to include a data dictionary
-table in this simple summary document. Uses for this function include
+table, box plots, histograms, and a table of missingness. Categorical
+variables are summarized with a table of frequencies for each
+category and another table for missingness, as well as a plot of category
+frequencies. Correlations between all variables are visualized in an
+interactive heatmap. There is also an option to include a data dictionary
+table in this summary document. Uses for this function include
 quickly inspecting a dataset for aberrant values and getting a sense for
 which variables are included.
 }
 \details{
-This Markdown document makes use of \link[DT]{datatable} from the DT package
-for the data dictionary and summary statistics tables, which can be
-sorted and searched. Categorical variable counts are summarized in a
-datatable with a column showing percentages with a bar plot in the
-background.
+This Markdown document makes use of \code{\link[DT]{datatable}} from the
+\code{DT} package for the data dictionary and summary statistics/missingness
+tables, which can be interactively sorted and searched. The correlation
+coefficients between all variables are calculated using
+\code{\link[psych]{mixedCor}}, which uses Pearson correlation coefficients
+between continuous variables, tetrachoric correlations between dichotomous
+variables, polychoric correlations between polytomous variables (i.e., >2
+categories), and biserial or polyserial correlations between continuous and
+categorical variable types. Polytomous variables are assumed to be
+ordinal for this calculation, so that should be factored into any
+interpretation. The correlation heatmap is rendered using
+\code{\link[plotly]{plot_ly}}, meaning that one can interactively zoom in if
+many variables are included, and hovering over a cell gives a pop-up message
+with the associated values.
 }
 \examples{
 # Make a data dictionary for the built-in iris dataset

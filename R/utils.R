@@ -1,5 +1,5 @@
 #Get a character string of all counts and percentages (e.g., "10 (5%)")
-countperc <- function(x, roundplace = 2, na.rm = T){
+countperc <- function(x, roundplace = 2, na.rm = TRUE){
   if(na.rm) summ <- summary(x[which(!is.na(x))]) else summ <- summary(x)
   perc <- prop.table(summ)
   summ <- paste0(summ, " (", round(perc*100, roundplace), "%)")
@@ -10,10 +10,10 @@ countperc <- function(x, roundplace = 2, na.rm = T){
 #Continuous variable summary statistics with the option of comparing by a 
 # categorical variable with 2 or more levels with t-tests or ANOVAs
 myvarcompsummary_cat_tab <- 
-  function(catnames, Data, compvar = NULL, catvarnames = NULL, kable = T, 
-           roundplace = 2, fontsize = 12, totalcol = F, nmissing = F, sigtest = T, 
-           allcomplete = F,  scroll = T,  scrollwidth = "100%", 
-           scrollheight = "200px"){
+  function(catnames, Data, compvar = NULL, catvarnames = NULL, kable = TRUE, 
+           roundplace = 2, fontsize = 12, totalcol = FALSE, nmissing = FALSE, 
+           sigtest = TRUE, allcomplete = FALSE,  scroll = TRUE,  
+           scrollwidth = "100%", scrollheight = "200px"){
   library(rcompanion)
   
   if(!is.null(compvar)){
@@ -79,10 +79,11 @@ myvarcompsummary_cat_tab <-
     if(!sigtest) summtab <- summtab[, -grep("p-value", names(summtab))]
     if(kable){
       K1 <- kable(summtab, "html") %>%
-        kable_styling(font_size = fontsize, full_width  =  F) %>%
+        kable_styling(font_size = fontsize, full_width  =  FALSE) %>%
         collapse_rows(columns = c(1, ncol(summtab)), valign = "top") %>%
-        column_spec(1, bold = T)
-      if(scroll) K1 <- K1 %>% scroll_box(width = scrollwidth, height = scrollheight)
+        column_spec(1, bold = TRUE)
+      if(scroll) K1 <- K1 %>% scroll_box(width = scrollwidth, 
+                                         height = scrollheight)
       print(K1)
     } else {
       return(summtab)
@@ -105,7 +106,8 @@ myvarcompsummary_cat_tab <-
       if(nmissing){
         responses <- c(lapply(Data[, catnames], function(x) summary(as.factor(x))))
       } else {
-        responses <- c(lapply(Data[, catnames], function(x) summary(as.factor(x[which(!is.na(x))]))))
+        responses <- c(lapply(Data[, catnames], 
+                              function(x) summary(as.factor(x[which(!is.na(x))]))))
       }
     }
     
@@ -126,9 +128,9 @@ myvarcompsummary_cat_tab <-
     names(summtab) <- c("Variable", "Category", "N (%)")
     if(kable){
       K1 <- kable(summtab[, -1], "html") %>%
-        kable_styling(font_size = fontsize, full_width  =  F) %>%
+        kable_styling(font_size = fontsize, full_width  =  FALSE) %>%
         pack_rows(index = table(forcats::fct_inorder(summtab[, 1]))) %>%
-        column_spec(1, bold = T)
+        column_spec(1, bold = TRUE)
       
       if(scroll) K1 <- K1 %>% scroll_box(width = scrollwidth, height = scrollheight)
       print(K1)
@@ -142,8 +144,8 @@ myvarcompsummary_cat_tab <-
 # categorical comparison variable is provided
 summtable_tt <- function(vars, Data, varnames = NULL, LODvars = NULL, 
                          compvar = NULL, newcomplvls = NULL, roundplace = 2, 
-                         padj = F, padjmethod = "BH", nonpar = F, perm = F, 
-                         signif = F){
+                         padj = FALSE, padjmethod = "BH", nonpar = FALSE, 
+                         perm = FALSE, signif = FALSE){
   if(signif){
     roundfunc <- function(x, roundplace){
       if(!any(c("POSIXt", "Date") %in% class(x))) signif(x, roundplace) else x
@@ -175,12 +177,12 @@ summtable_tt <- function(vars, Data, varnames = NULL, LODvars = NULL,
     for(i in 1:length(vars)){
       summtable1[i, 1] <- varnames[i]
       summtable1[i, 2] <- "Total"
-      summtable1[i, 4] <- paste0(roundfunc(mean(Data[, vars[i]], na.rm = T), roundplace), " (", 
-                              roundfunc(sd(Data[, vars[i]], na.rm = T), roundplace), ")")
-      summtable1[i, 5] <- paste0(roundfunc(median(Data[, vars[i]], na.rm = T), roundplace), " (", 
-                              roundfunc(min(Data[, vars[i]], na.rm = T), roundplace), " - ", 
-                              roundfunc(max(Data[, vars[i]], na.rm = T), roundplace), ")")
-      nobs <- length(which(is.na(Data[, vars[i]]) == F)) #nmiss
+      summtable1[i, 4] <- paste0(roundfunc(mean(Data[, vars[i]], na.rm = TRUE), roundplace), " (", 
+                              roundfunc(sd(Data[, vars[i]], na.rm = TRUE), roundplace), ")")
+      summtable1[i, 5] <- paste0(roundfunc(median(Data[, vars[i]], na.rm = TRUE), roundplace), " (", 
+                              roundfunc(min(Data[, vars[i]], na.rm = TRUE), roundplace), " - ", 
+                              roundfunc(max(Data[, vars[i]], na.rm = TRUE), roundplace), ")")
+      nobs <- length(which(is.na(Data[, vars[i]]) == FALSE)) #nmiss
       summtable1[i, 3] <- nobs
       if(nonpar){
         if(nlevels == 2){
@@ -209,25 +211,33 @@ summtable_tt <- function(vars, Data, varnames = NULL, LODvars = NULL,
       summtable1[i, 6] <- signif(ttp, roundplace)
       if(!is.null(LODvars)){
         nLOD <- length(which(Data[, LODvars[i]] == 1))
-        summtable1[i, 7] <- paste0(nLOD, " (", round((nLOD/nobs)*100, roundplace), "%)")
+        summtable1[i, 7] <- paste0(nLOD, " (", round((nLOD/nobs)*100, 
+                                                     roundplace), "%)")
       }
       for(j in 1:nlevels){
         rownum <- (1+(j-1))+((i-1)*nlevels)
         thislevel <- levels(Data[, compvar])[j]
         summtable2[rownum, 1] <- varnames[i]
         summtable2[rownum, 2] <- thislevel
-        summtable2[rownum, 4] <- paste0(roundfunc(mean(Data[Data[, compvar] == thislevel, vars[i]], na.rm = T), roundplace), " (", 
-                                     roundfunc(sd(Data[Data[, compvar] == thislevel, vars[i]], na.rm = T), roundplace), ")")
-        summtable2[rownum, 5] <- paste0(roundfunc(median(Data[Data[, compvar] == thislevel, vars[i]], na.rm = T), roundplace), " (", 
-                                     roundfunc(min(Data[Data[, compvar] == thislevel, vars[i]], na.rm = T), roundplace), " - ", 
-                                     roundfunc(max(Data[Data[, compvar] == thislevel, vars[i]], na.rm = T), roundplace), ")")
-        nobs <- length(which(is.na(Data[Data[, compvar] == thislevel, vars[i]]) == F))#nmiss
+        summtable2[rownum, 4] <- 
+          paste0(roundfunc(mean(Data[Data[, compvar] == thislevel, vars[
+            i]], na.rm = TRUE), roundplace), " (", roundfunc(sd(Data[Data[
+              , compvar] == thislevel, vars[i]], na.rm = TRUE), roundplace), ")")
+        summtable2[rownum, 5] <- 
+          paste0(roundfunc(median(Data[Data[, compvar] == thislevel, vars[
+            i]], na.rm = TRUE), roundplace), " (", roundfunc(min(Data[Data[
+              , compvar] == thislevel, vars[i]], na.rm = TRUE), roundplace), 
+            " - ", roundfunc(max(Data[Data[, compvar] == thislevel, vars[i]], 
+                                 na.rm = TRUE), roundplace), ")")
+        nobs <- length(which(is.na(Data[Data[, compvar] == thislevel, 
+                                        vars[i]]) == FALSE))#nmiss
         summtable2[rownum, 3] <- nobs
         if(nlevels > 2){
           if(nonpar){
-            tt <- tryCatch(wilcox.test(Data[which(Data[, compvar] == levels(Data[, compvar])[j]), vars[i]], 
-                                Data[which(Data[, compvar]!= levels(Data[, compvar])[j]), vars[i]]), 
-                         error = function(e) NULL)
+            tt <- tryCatch(wilcox.test(Data[which(Data[, compvar] == levels(
+              Data[, compvar])[j]), vars[i]], 
+              Data[which(Data[, compvar]!= levels(Data[, compvar])[j]), vars[i]]), 
+              error = function(e) NULL)
             if(is.null(tt)) ttp <- NA else ttp <- tt$p.value
           } else if(perm){
             ttp <- perm.ttest(Data[which(Data[, compvar] == levels(Data[, compvar])[j]), vars[i]], 
@@ -294,15 +304,16 @@ summtable_tt <- function(vars, Data, varnames = NULL, LODvars = NULL,
     }
     for(i in 1:length(vars)){
       summtable[i, 1] <- varnames[i]
-      summtable[i, 3] <- paste0(roundfunc(mean(Data[, vars[i]], na.rm = T), roundplace), " (", 
-                             roundfunc(sd(Data[, vars[i]], na.rm = T), roundplace), ")")
-      summtable[i, 4] <- paste0(roundfunc(median(Data[, vars[i]], na.rm = T), roundplace), " (", 
-                             roundfunc(min(Data[, vars[i]], na.rm = T), roundplace), " - ", 
-                             roundfunc(max(Data[, vars[i]], na.rm = T), roundplace), ")")
-      summtable[i, 2] <- length(which(is.na(Data[, vars[i]]) == F))
+      summtable[i, 3] <- paste0(roundfunc(mean(Data[, vars[i]], na.rm = TRUE), roundplace), " (", 
+                             roundfunc(sd(Data[, vars[i]], na.rm = TRUE), roundplace), ")")
+      summtable[i, 4] <- paste0(roundfunc(median(Data[, vars[i]], na.rm = TRUE), roundplace), " (", 
+                             roundfunc(min(Data[, vars[i]], na.rm = TRUE), roundplace), " - ", 
+                             roundfunc(max(Data[, vars[i]], na.rm = TRUE), roundplace), ")")
+      summtable[i, 2] <- length(which(is.na(Data[, vars[i]]) == FALSE))
       if(!is.null(LODvars)){
         nLOD <- length(which(Data[, LODvars[i]] == 1))
-        summtable[i, 5] <- paste0(nLOD, " (", round((nLOD/length(which(is.na(Data[, vars[i]]) == F)))*100, roundplace), "%)")
+        summtable[i, 5] <- paste0(nLOD, " (", round((nLOD/length(which(is.na(
+          Data[, vars[i]]) == FALSE)))*100, roundplace), "%)")
       }
     }
     if(!is.null(LODvars)){
@@ -316,8 +327,10 @@ summtable_tt <- function(vars, Data, varnames = NULL, LODvars = NULL,
 }
 
 #Plot of correlation coefficients
-mypearson <- function(contnames, catnames = NULL, Data = tides_ndphxcc, plot = T, exclude = F, cutoff = 0.4, 
-                    corindex = NULL, usemethod = "pearson", plottitle = "", fontsize = 0.6){
+mypearson <- function(contnames, catnames = NULL, Data = tides_ndphxcc, 
+                      plot = TRUE, exclude = FALSE, cutoff = 0.4, 
+                    corindex = NULL, usemethod = "pearson", plottitle = "", 
+                    fontsize = 0.6){
   if(!is.null(catnames)){
     mydums <- predict(dummyVars(formula(paste0("~", paste(catnames, collapse = "+"))), 
                               Data), Data)
@@ -326,23 +339,27 @@ mypearson <- function(contnames, catnames = NULL, Data = tides_ndphxcc, plot = T
     corprepmat <- Data[, contnames]
   }
   cor1 <- cor(corprepmat, use = "pairwise.complete.obs", method = usemethod)
-  if(exclude == T){
+  if(exclude){
     cor_index <- which(unlist(lapply(as.data.frame(cor1), 
                                    function(x) max(abs(x[x%nin%c(-1, 1)]))))>cutoff)
   }
-  if(plot == T){
+  if(plot){
     col1 <- colorRampPalette(c("red", "grey", "blue"))
     if(exclude == T){
-      corrplot::corrplot.mixed(cor1[cor_index, cor_index], upper = "ellipse", lower = "number", 
-                               lower.col = col1(20), tl.pos = "lt", tl.col = "black", tl.cex = fontsize, 
-                               number.cex = fontsize)
+      corrplot::corrplot.mixed(cor1[cor_index, cor_index], upper = "ellipse", 
+                               lower = "number", lower.col = col1(20), 
+                               tl.pos = "lt", tl.col = "black", 
+                               tl.cex = fontsize, number.cex = fontsize)
     } else if(!is.null(corindex)){
-      corrplot::corrplot.mixed(cor1[corindex[[1]], corindex[[2]]], upper = "ellipse", lower = "number", 
-                               lower.col = col1(20), tl.pos = "lt", tl.col = "black", tl.cex = fontsize, 
+      corrplot::corrplot.mixed(cor1[corindex[[1]], corindex[[2]]], 
+                               upper = "ellipse", lower = "number", 
+                               lower.col = col1(20), tl.pos = "lt", 
+                               tl.col = "black", tl.cex = fontsize, 
                                number.cex = fontsize)
     } else {
       corrplot::corrplot.mixed(cor1, upper = "ellipse", lower = "number", 
-                               lower.col = col1(20), tl.pos = "lt", tl.col = "black", tl.cex = fontsize, 
+                               lower.col = col1(20), tl.pos = "lt", 
+                               tl.col = "black", tl.cex = fontsize, 
                                number.cex = fontsize)
     }
   } else {
@@ -358,7 +375,7 @@ mypearson <- function(contnames, catnames = NULL, Data = tides_ndphxcc, plot = T
 
 #Continuous variable summary statistics
 myvarcompsummary <- function(colnames, Data, compvar = NULL, outname = "Score", 
-                           compname = "Version", footnote = NULL, kable = T){
+                           compname = "Version", footnote = NULL, kable = TRUE){
   myskew <- function(x){
     if(length(x[!is.na(x)])<3){
       skew <- NA 
@@ -375,22 +392,23 @@ myvarcompsummary <- function(colnames, Data, compvar = NULL, outname = "Score",
     }
     return(kurt)
   }
-  nacountperc <- function(x) {paste0(length(which(is.na(x) == T)), " (",     
-                                   round((length(which(is.na(x) == T))/length(x))*100, 2), "%)")}
+  nacountperc <- function(x) {paste0(length(which(is.na(x))), " (",     
+                                   round((length(which(is.na(x)))/length(x))*100, 2), "%)")}
   
   if(is.null(compvar)){
     Outtable <- as.data.frame(matrix(NA, length(colnames), 13))
     Outtable[, 1] <- colnames
     Outtable[, 2] <- "Combined"
     aggform1 <- formula(paste0("cbind(", paste(colnames, collapse = ", "), ")~1"))
-    Outtable[, 3] <- unlist(aggregate(aggform1, Data, FUN = function(x) length(x[!is.na(x)]), na.action = NULL))
+    Outtable[, 3] <- unlist(aggregate(aggform1, Data, FUN = function(
+    x) length(x[!is.na(x)]), na.action = NULL))
     for(i in 1:length(colnames)){
       aggform2 <- formula(paste0(colnames[i], "~1"))
       totagg1 <- as.data.frame(aggregate(aggform2, Data[!is.na(Data[, colnames[i]]), ], 
                                        FUN = summary, na.action = NULL))
       Outtable[i, 4:9] <- unlist(totagg1)[1:6]
     }
-    Outtable[, 10] <- unlist(aggregate(aggform1, Data, FUN = function(x) sd(x, na.rm = T), 
+    Outtable[, 10] <- unlist(aggregate(aggform1, Data, FUN = function(x) sd(x, na.rm = TRUE), 
                                     na.action = NULL))
     Outtable[, 11] <- unlist(aggregate(aggform1, Data, FUN = myskew, na.action = NULL))
     Outtable[, 12] <- unlist(aggregate(aggform1, Data, FUN = mykurt, na.action = NULL))
@@ -412,7 +430,7 @@ myvarcompsummary <- function(colnames, Data, compvar = NULL, outname = "Score",
       }
     }
     Outtable[, 10] <- as.numeric(as.character(
-      unlist(aggregate(aggform1, Data, FUN = function(x) sd(x, na.rm = T), 
+      unlist(aggregate(aggform1, Data, FUN = function(x) sd(x, na.rm = TRUE), 
                                     na.action = NULL))[(1+ncomplevels):
                                                        (ncomplevels*length(colnames)+ncomplevels)]))
     Outtable[, 11] <- as.numeric(as.character(unlist(aggregate(aggform1, Data, FUN = myskew, 
@@ -440,12 +458,12 @@ myvarcompsummary <- function(colnames, Data, compvar = NULL, outname = "Score",
     if(is.null(footnote)){
       K <- kable(Outtable, "html") %>%
         kable_styling(font_size = 16) %>%
-        column_spec(1, bold = T) %>%
+        column_spec(1, bold = TRUE) %>%
         collapse_rows(columns = 1, valign = "top")
     } else {
       K <- kable(Outtable, "html") %>%
         kable_styling(font_size = 16) %>%
-        column_spec(1, bold = T) %>%
+        column_spec(1, bold = TRUE) %>%
         collapse_rows(columns = 1, valign = "top") %>%
         footnote(general = footnote)
     }
@@ -456,9 +474,10 @@ myvarcompsummary <- function(colnames, Data, compvar = NULL, outname = "Score",
 }
 
 #Boxplots of variables compared by levels of a categorical variable
-subset_bplot <- function(grepname = NULL, Data, compvar = "Trimester", compname = "Trimester", 
-                       comp = T, colnames = NULL, meancolor = "purple", palette = NULL, matchaxes = F, 
-                       starvec = NULL){
+subset_bplot <- function(grepname = NULL, Data, compvar = "Trimester", 
+                         compname = "Trimester", comp = TRUE, colnames = NULL, 
+                         meancolor = "purple", palette = NULL, matchaxes = FALSE, 
+                         starvec = NULL){
   if(is.null(colnames)){
     if(is.null(grepname)){
       meltDat <- Data
@@ -486,9 +505,9 @@ subset_bplot <- function(grepname = NULL, Data, compvar = "Trimester", compname 
   
   if(comp == T){
     greppattern <- paste(c(grepname, colnames, compvar), collapse = "|")
-    if(any(grepl("(", names(Data), fixed = T))){
-      greppattern <- gsub("(", "\\(", greppattern, fixed = T)
-      greppattern <- gsub(")", "\\)", greppattern, fixed = T)
+    if(any(grepl("(", names(Data), fixed = TRUE))){
+      greppattern <- gsub("(", "\\(", greppattern, fixed = TRUE)
+      greppattern <- gsub(")", "\\)", greppattern, fixed = TRUE)
     }
     subData_longer <- reshape2::melt(Data[, c(grep(greppattern, 
                                                 names(Data)))], id.vars = compvar)
@@ -496,7 +515,8 @@ subset_bplot <- function(grepname = NULL, Data, compvar = "Trimester", compname 
     names(subData_longer)[1] <- "Comparison"
     
     for(i in levels(subData_long$variable)){
-      myarg <- length(which(is.na(subData_long[subData_long$variable == i, "value"]) == T)) >= 
+      myarg <- length(which(is.na(subData_long[
+        subData_long$variable == i, "value"]) == TRUE)) >= 
         min(unlist(summary(as.factor(Data[!is.na(Data[, compvar]), compvar]))))
       if(myarg == TRUE){
         subData_long[subData_long$variable == i, "value"] <- NA
@@ -627,8 +647,8 @@ subset_bplot <- function(grepname = NULL, Data, compvar = "Trimester", compname 
 }
 
 #Simple summary output for categorical variables
-myvarcompsummary_cat <- function(catnames, Data, catvarnames = NULL, fontsize = 12, 
-                                 omitmissing = F){
+myvarcompsummary_cat <- function(catnames, Data, catvarnames = NULL, 
+                                 fontsize = 12, omitmissing = FALSE){
   if(is.null(catvarnames)) catvarnames <- catnames
   for(i in 1:length(catnames)){
     if(omitmissing) tempDat <- Data[complete.cases(Data[, catnames[i]]), 
@@ -643,14 +663,14 @@ myvarcompsummary_cat <- function(catnames, Data, catvarnames = NULL, fontsize = 
         unlist(summ)))*100, 2), "%)")
     }
     K1 <- kable(kablemat, "html", caption = paste0(catvarnames[i])) %>%
-      kable_styling(font_size = fontsize, full_width  =  F) %>%
-      row_spec(1, bold = T)
+      kable_styling(font_size = fontsize, full_width  =  FALSE) %>%
+      row_spec(1, bold = TRUE)
     print(K1)
   }
 }
 
 #Quantile transform a numeric vector into q quantiles (e.g., quartiles if q=4)
-myquantile <- function(x, q, labelnumbers = T){
+myquantile <- function(x, q, labelnumbers = TRUE){
   mybreaks <- quantile(x, probs = seq(0, 1, by = 1/q))
   if(labelnumbers){
     myquants <- cut(x, breaks = mybreaks, labels = 1:q)
@@ -707,7 +727,7 @@ confint_qt <- function(beta, se, DF, IQR = 1, level = 0.95){
 }
 
 #Capitalize the 1st letter of either just the 1st word or each word in a string
-capfirst <- function(x, eachword = F) {
+capfirst <- function(x, eachword = FALSE) {
   if(eachword){
     s1 <- strsplit(x, " ")[[1]]
     paste0(toupper(substring(s1, 1, 1)), substring(s1, 2), collapse = " ")
@@ -723,7 +743,8 @@ nCr <- function(n, r) factorial(n)/(factorial(r) * factorial(n - r))
 getcombos <- function(x, y = NULL, r = 2){
   if(is.character(x)) x <- as.factor(x)
   if(is.null(levels(x))) xcomb <- "No combos" else {
-    tmp <- tryCatch(combn(levels(x), r, simplify = F), error = function(e) NULL)
+    tmp <- tryCatch(combn(levels(x), r, simplify = FALSE), 
+                    error = function(e) NULL)
     if(is.null(tmp)) xcomb <- "No combos" else xcomb <- sapply(
       tmp, function(ww) paste(ww, collapse = "|"))
   }
@@ -733,7 +754,7 @@ getcombos <- function(x, y = NULL, r = 2){
       ycomb <- "No combos"
       xycomb <- xcomb
     } else {
-      tmp2 <- tryCatch(combn(levels(y), r, simplify = F), 
+      tmp2 <- tryCatch(combn(levels(y), r, simplify = FALSE), 
                        error = function(e) NULL)
       if(is.null(tmp2)){
         ycomb <- "No combos"
@@ -774,13 +795,13 @@ findexampledata <- function(path = NULL){
   if(is.null(path)){ 
     dir(system.file("exdata", package = "DrewDayRFunctions"))
   } else {
-    system.file("exdata", path, package = "DrewDayRFunctions", mustWork = T)
+    system.file("exdata", path, package = "DrewDayRFunctions", mustWork = TRUE)
   }
 }
 
 #Get model coefficients & CIs from a glm, lm, or logistf
-getmodelcoefs <- function(mod, pred = NULL, ixterm = NULL, robust = T, 
-                          HCtype = "HC0", usedf = F){
+getmodelcoefs <- function(mod, pred = NULL, ixterm = NULL, robust = TRUE, 
+                          HCtype = "HC0", usedf = FALSE){
   if(any("list" %in% class(mod)) | any("mira" %in% class(mod))){
     modcoef <- summary(mice::pool(mod), conf.int = T)
     rownames(modcoef) <- modcoef$term
@@ -844,12 +865,12 @@ getmodelcoefs <- function(mod, pred = NULL, ixterm = NULL, robust = T,
 #Escape all regex-active characters in a string
 escapespecialchars <- function(x, specialchar = "^$&=.?*|+-()[]{}/%!"){
   specialchar <- strsplit(specialchar, split = "")[[1]]
-  for(i in specialchar) x <- gsub(i, paste0("\\", i), x, fixed = T)
+  for(i in specialchar) x <- gsub(i, paste0("\\", i), x, fixed = TRUE)
   return(x)
 }
 
 #Determine if variables are continuous, binary, or count data
-getvartype <- function(out, Data, integerascount = F){
+getvartype <- function(out, Data, integerascount = FALSE){
   if(integerascount && is.integer(Data[, out])) "count" else if(
     length(unique(Data[which(!is.na(Data[, out]) & 
                              !is.nan(Data[, out])), out])) == 2) "binary" else 
@@ -860,7 +881,7 @@ getvartype <- function(out, Data, integerascount = F){
 # That threshold is either a specific value 'leverage.cutoff', a certain 
 # multiplier above the mean Cook's distance 'leverage.meancutoff', or 4 times 
 # the mean Cook's distance if both of the former are NULL.
-omithighcooks <- function(mod, mice = F, leverage.cutoff = 0.2, 
+omithighcooks <- function(mod, mice = FALSE, leverage.cutoff = 0.2, 
                           leverage.meancutoff = NULL){
   if(mice){
     if(class(mod) == "mira") mod <- mod$analyses
@@ -916,7 +937,7 @@ omithighcooks <- function(mod, mice = F, leverage.cutoff = 0.2,
 
 #Run a new model of type 'lm', 'glm', 'glm.nb', 'logistf', or a MICE list of 
 # models of any of the first 3 types
-getnewmod <- function(mod, newData, miceFlag = F){
+getnewmod <- function(mod, newData, miceFlag = FALSE){
   if(miceFlag){
     if(any("mira" %in% class(mod))){
       exmod <- mod$analyses[[1]]
@@ -974,8 +995,8 @@ palfunc <- function(cols = RColorBrewer::brewer.pal(8, "Set2")){
 # A function for creating a plot specifically based on the Resultsmat table 
 # internally produced in the GLMResults function.
 GLMResults_plot <- function(Resultsmat, horint = 0, facetcol = NULL, 
-                            yl = "Coefficient", colorbypred = T, 
-                            colorpal = NULL, log10yaxis = F, 
+                            yl = "Coefficient", colorbypred = TRUE, 
+                            colorpal = NULL, log10yaxis = FALSE, 
                             Predtitle = "Exposure"){
   if(any(grepl("\\:", Resultsmat$Variable))){
     exint <- Resultsmat[grep("\\:", Resultsmat$Variable), "Variable"][1]
@@ -1181,6 +1202,157 @@ GLMResults_plot <- function(Resultsmat, horint = 0, facetcol = NULL,
   return(gg1)
 }
 
+#Uses data table to show N and % missingness by variable with a barplot 
+# background for the percent column
+misspercdt <- function(Data){
+  if(any(grepl("tbl", class(Data)))) Data <- as.data.frame(Data)
+  totrow <- nrow(Data)
+  missdat <- data.frame(Columns = names(Data))
+  missdat$N <- vapply(Data, function(x) length(which(is.na(x))), 
+                           integer(1))
+  missdat$Percent <- round((missdat$N_miss/nrow(Data))*100, 2)
+  DT::datatable(missdat, rownames = F, caption = "Missingness Counts") %>% 
+    formatStyle("Percent", background = styleColorBar(c(0, 100), 'tomato'), 
+                backgroundSize = '98% 88%', 
+                backgroundRepeat = 'no-repeat', backgroundPosition = 'center')
+}
+
+#Get a data frame with category variable names, categories, and percents
+processcatsumm <- function(Dat, catvars = NULL){
+  if(!is.null(catvars)) Dat <- Dat[, catvars]
+  if(!is.data.frame(Data)) Dat <- as.data.frame(Dat)
+  if(ncol(Dat) == 1){
+    if(!is.null(catvars)) names(Dat)[1] <- catvars[1]
+    if(is.character(Dat[, 1])) Dat[, 1] <- as.factor(Dat[, 1])
+    catsumm <- summary(Dat[which(!is.na(Dat[, 1])), 1])
+    outdat <- data.frame(Variable = names(Dat)[1], 
+                         Category = levels(Dat[, 1]), 
+                         Percent = 100 * (catsumm/sum(catsumm)))
+  } else {
+    charbool <- grepl("character", sapply(Dat, class))
+    if(any(charbool)){
+      if(length(which(charbool)) == 1){
+        Dat[, which(charbool)] <- as.factor(Dat[, which(charbool)])
+      } else {
+        Dat[, which(charbool)] <- lapply(Dat[, which(charbool)], as.factor)
+      }
+    }
+    extrlist <- lapply(Dat, function(x) summary(x[which(!is.na(x))]))
+    extrlist <- lapply(extrlist, function(x) (x/sum(x)) * 100)
+    outdat <- data.frame(
+      Variable = rep(names(extrlist), sapply(extrlist, length)), 
+      Category = do.call('c', sapply(extrlist, names)),
+      Percent = do.call('c', extrlist))
+    outdat$Variable <- factor(outdat$Variable, levels = unique(outdat$Variable))
+    outdat$Category <- factor(outdat$Category, levels = unique(outdat$Category))
+    return(outdat)
+  }
+}
+
+# This uses the processcatsumm function above to create a barplot showing 
+# percentages of each category within each categorical variable
+catpercviz <- function(Data, catvars = NULL, catvarnames = NULL, rowcutoff = 30){
+  plotdat <- processcatsumm(Data, catvars)
+  if(!is.null(catvarnames)){
+    levels(plotdat$Variable) <- tryCatch(
+      catvarnames, error = function(e) levels(plotdat$Variable))
+  }
+  plotdat$VarCat <- interaction(plotdat$Variable, plotdat$Category, sep = ": ", 
+                                drop = TRUE)
+  if(nrow(plotdat) < rowcutoff){
+    hjstcutoff <- max(plotdat$Percent) - ceiling(max(plotdat$Percent)/12)
+    plotdat$hjst <- ifelse(plotdat$Percent >= hjstcutoff, 1.1, -0.1)
+    outplot <- ggplot(plotdat, aes(x = VarCat, y = Percent)) + theme_bw() + 
+      geom_bar(stat = "identity", position = "dodge", 
+               colour = "#484878", fill = "#cccccc") + 
+      geom_text(aes(label = paste0(round(Percent, 2), "%"), hjust = hjst)) + 
+      facet_grid(Variable ~ ., space = "free_y", scale = "free_y") + 
+      coord_flip() + ggtitle("Percent Categories") + 
+      theme(strip.background = element_blank(), strip.text = element_blank(), 
+            axis.title = element_blank(), axis.text = element_text(size = 10),
+            plot.title = element_text(hjust = 0.5))
+    return(outplot)
+  } else {
+    divs <- floor(nrow(plotdat)/rowcutoff)
+    indlist <- list()
+    inclpredlist <- list()
+    plotlist <- list()
+    for(i in 1:divs){
+      if(nrow(plotdat) < (rowcutoff * i)){
+        indlist[[i]] <- c((1 + (rowcutoff * (i - 1))) : nrow(plotdat))
+      } else indlist[[i]] <- c((1 + (rowcutoff * (i - 1))) : (rowcutoff * i))
+      inclpredlist[[i]] <- 
+        unique(as.character(plotdat[indlist[[i]], "Variable"]))
+    }; rm(i)
+    for(i in 1:divs){
+      if(i > 1){
+        if(any(inclpredlist[[i]] %in% inclpredlist[[i - 1]])){
+          if(length(inclpredlist[[i]]) > 1){
+            inclpredlist[[i]] <- inclpredlist[[i]][
+              which(!inclpredlist[[i]] %in% inclpredlist[[i - 1]])]
+          } else next
+        }
+      }
+      tmpplotdat <- plotdat[which(plotdat$Variable %in% inclpredlist[[i]]), ]
+      hjstcutoff <- max(tmpplotdat$Percent) - 
+        ceiling(max(tmpplotdat$Percent)/12)
+      tmpplotdat$hjst <- ifelse(tmpplotdat$Percent >= hjstcutoff, 1.1, -0.1)
+      plotlist[[i]] <- ggplot(tmpplotdat, aes(x = VarCat, y = Percent)) +  
+        geom_bar(stat = "identity", position = "dodge", 
+                 colour = "#484878", fill = "#cccccc") + 
+        geom_text(aes(label = paste0(round(Percent, 2), "%"), hjust = hjst)) + 
+        facet_grid(Variable ~ ., space = "free_y", scale = "free_y") + 
+        coord_flip() + ggtitle("Percent Categories") + theme_bw() + 
+        theme(strip.background = element_blank(), strip.text = element_blank(), 
+              axis.title = element_blank(), axis.text = element_text(size = 10),
+              plot.title = element_text(hjust = 0.5))
+    }; rm(i)
+    return(plotlist)
+  }
+}
+
+#This function produces an interactive plotly heatmap of correlations between 
+# all variables in a dataset, including continuous, binary, and polytomous
+allcorviz <- function(Data, colpalette = NULL){
+  if(is.null(colpalette)) colpalette <- colorRampPalette(c("red", "gray95", "blue"))
+  if(any(sapply(corrdat, is.character))) corrdat[, sapply(corrdat, is.character)] <- 
+      lapply(corrdat[, sapply(corrdat, is.character)], as.factor)
+  if(any(sapply(corrdat, is.factor))){
+    faccols <- names(corrdat)[which(sapply(corrdat, is.factor))]
+    polybool <- sapply(corrdat[, faccols], function(x) length(levels(x) > 2))
+    bincols <- faccols[!polybool]
+    polycols <- faccols[polybool]
+    corrdat[, sapply(corrdat, is.factor)] <- 
+      lapply(corrdat[, sapply(corrdat, is.factor)], as.numeric)
+    if(!any(sapply(corrdat, is.numeric))){
+      allcor <- psych::mixedCor(corrdat, d = bincols, p = polycols)
+    } else {
+      contcols <- setdiff(names(corrdat), c(bincols, polycols))
+      allcor <- mixedCor(corrdat, c = contcols, d = bincols, p = polycols)
+    }
+  } else {
+    allcor <- mixedCor(corrdat)
+  }
+  allcordat <- as.data.frame(allcor$rho)
+  allcordat$Variable1 <- rownames(allcordat)
+  allcordat <- reshape2::melt(allcordat, id.vars = "Variable1", 
+                              value.name = "Corr", variable.name = "Variable2")
+  allcordat$Variable1 <- factor(allcordat$Variable1, 
+                                levels = rev(levels(allcordat$Variable2)))
+  allcordat$Label <- round(allcordat$Corr, 2)
+  pl <- plotly::plot_ly(y = allcordat$Variable1, x = allcordat$Variable2, 
+                z = allcordat$Corr, type = "heatmap", colors = colpalette(20), 
+                alpha = 0.7) %>%
+    add_annotations(data = allcordat,
+      x = ~Variable2, 
+      y = ~Variable1, 
+      text = ~Label, 
+      xref = 'x', 
+      yref = 'y', 
+      showarrow = FALSE, 
+      font=list(color='black', size=15))
+  return(pl)
+}
 
 #The following rewrites ggalt::stat_xspline so that you don't have to download 
 # that package's annoying proj4 dependency, which can cause download errors. 

@@ -12,6 +12,7 @@ params:
 library(dplyr)
 library(ggplot2)
 library(DT)
+library(plotly)
 
 if(!is.null(idvar) & !any(class(Data[, idvar]) %in% c("character", "factor"))){
   Data[, idvar] <- as.character(Data[, idvar])
@@ -31,10 +32,11 @@ if(!is.null(idvar) & any(idvar %in% catvars))
 
 howhigh <- 5 + (((length(contvars) - 5)/5) * 3)
 
-knitr::opts_chunk$set(echo = F, warning = F, message = F, fig.align = "center", 
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE, 
+                      fig.align = "center", 
                       fig.width = 10, fig.height = howhigh)
-if(is.null(Dict)) dictlogic <- F else dictlogic <- T
-if(is.null(idvar)) idlogic <- F else idlogic <- T
+if(is.null(Dict)) dictlogic <- FALSE else dictlogic <- TRUE
+if(is.null(idvar)) idlogic <- FALSE else idlogic <- TRUE
 ```
 
 ## Introduction
@@ -42,6 +44,8 @@ if(is.null(idvar)) idlogic <- F else idlogic <- T
 This document outputs crude summary statistics separately for the continuous and categorical variables in a Data frame being sent out for analysis. As an html document, you can manipulate objects in the document by clicking through pages of tables and by clicking the column names of any table, which will sort the values in that column from low to high value (one click) or high to low value (two clicks). Please also note that search bar at the top right of tables, in which you can type strings to search the entire table.
 
 This data frame contains `r nrow(Data)` rows and `r ncol(Data)` columns, of which `r length(which(sapply(Data, function(x) any(class(x) %in% c("numeric", "Date", "POSIXct", "POSIXlt")))))` are continuous, `r length(which(sapply(Data, is.integer)))` are integers, and `r length(which(sapply(Data, function(x) any(class(x) %in% c("factor", "character")))))` are categorical.
+
+Overall, this data frame is missing `r length(which(is.na(Data)))` observations (`r round((length(which(is.na(Data)))/prod(dim(Data)))*100, 2)`% of all observations). Additional missingness information is broken down by continuous and categorical variable types below in the "Missingness" tabs.
 
 ```{r idtable, eval = idlogic, include = F}
 idcounts <- Data %>% count(!!as.name(idvar))
@@ -119,21 +123,73 @@ cowplot::plot_grid(plotlist = bplist, ncol = 5, align = "hv")
 cowplot::plot_grid(plotlist = histlist, ncol = 5, align = "hv")
 ```
 
-## Categorical Summary Statistics
+### Pearson Correlations
+
+```{r contcorr_pre, results='asis'}
+if(length(contvars) > 30){
+  nocontcorrtag <- TRUE
+  cat("There are too many continuous variables to plot correlation coefficients.")
+} else nocontcorrtag <- FALSE
+```
+```{r contcorr}
+if(!nocontcorrtag) mypearson(Data = Data[, contvars])
+```
+
+### Missingness
+
+```{r contmiss}
+misspercdt(Data[, contvars])
+```
+
+## Categorical Summary Statistics {.tabset}
+
+### Table
 
 ```{r cattable}
-cattab <- myvarcompsummary_cat_tab(catvars, Data, kable = F)
+cattab <- myvarcompsummary_cat_tab(catvars, Data, kable = FALSE)
 cattab$N <- as.integer(gsub("\\(.*", "", cattab[, 3]))
 cattab$Percent <- gsub(".*\\(", "", cattab[, 3])
 cattab$Percent <- as.numeric(gsub("\\%.*", "", cattab$Percent))
 cattab <- cattab[, -3]
 
-DT::datatable(cattab, rownames = F#, options = list(
-  # columnDefs = list(list(targets = 4, render = JS(js))))
-) %>% 
+DT::datatable(cattab, rownames = FALSE) %>% 
   formatStyle("Percent", background = styleColorBar(c(0, 100), 'lightblue'), 
               backgroundSize = '98% 88%', 
               backgroundRepeat = 'no-repeat', backgroundPosition = 'center')
+```
+
+### Plot
+
+```{r catplot}
+catplot <- catpercviz(Data[, catvars])
+if(is.list(catplot) & length(catplot) > 1){
+  for(i in 1:length(catplot)){
+    cat("#### Subplots {.tabset} \n\n")
+    cat(paste0("##### Subplot ", i, "\n\n"))
+    catplot[[i]]
+    cat("\n\n")
+  }; rm(i)
+} else if(is.list(catplot) & length(catplot) == 1){
+  catplot[[1]]
+} else {
+  catplot
+}
+```
+
+### Missingness
+
+```{r catmiss}
+misspercdt(Data[, catvars])
+```
+
+## Overall Correlations
+
+This correlation matrix involves Pearson correlations for continuous variables, polychorics for polytomous variables, tetrachorics for dichotomous variables and polyserial or biserial correlations for the mixed variables. Hover over cells for exact values, and zoom in and out using the top right menu.
+
+```{r allmiss}
+corrdat <- Data
+if(!is.null(idvar)) corrdat <- corrdat[, -which(names(corrdat) == idvar)]
+allcorviz(corrdat)
 ```
 
 ## End of Document
