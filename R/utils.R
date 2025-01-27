@@ -1324,15 +1324,22 @@ allcorviz <- function(corrdat, colpalette = NULL){
       lapply(corrdat[, sapply(corrdat, is.character)], as.factor)
   if(any(sapply(corrdat, is.factor))){
     faccols <- names(corrdat)[which(sapply(corrdat, is.factor))]
-    polybool <- sapply(corrdat[, faccols], function(x) length(levels(x) > 2))
+    if(length(faccols) == 1){
+      polybool <- ifelse(length(levels(corrdat[, faccols]) > 2), TRUE, FALSE)
+    } else {
+      polybool <- sapply(corrdat[, faccols], function(x) length(levels(x) > 2))
+    }
     bincols <- faccols[!polybool]
     polycols <- faccols[polybool]
+    if(length(polycols) == 0) polycols <- NULL
+    if(length(bincols) == 0) bincols <- NULL
     corrdat[, sapply(corrdat, is.factor)] <- 
       lapply(corrdat[, sapply(corrdat, is.factor)], as.numeric)
     if(!any(sapply(corrdat, is.numeric))){
-      allcor <- psych::mixedCor(corrdat, d = bincols, p = polycols)
+      allcor <- mixedCor(corrdat, d = bincols, p = polycols)
     } else {
       contcols <- setdiff(names(corrdat), c(bincols, polycols))
+      if(length(contcols) == 0) contcols <- NULL
       allcor <- mixedCor(corrdat, c = contcols, d = bincols, p = polycols)
     }
   } else {
