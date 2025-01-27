@@ -1219,7 +1219,12 @@ misspercdt <- function(Data){
 
 #Get a data frame with category variable names, categories, and percents
 processcatsumm <- function(Dat, catvars = NULL){
-  if(!is.null(catvars)) Dat <- Dat[, catvars]
+  if(!is.null(catvars)){
+    if(length(catvars) == 1){
+      Dat <- as.data.frame(Dat[, catvars])
+      names(Dat) <- catvars
+    } else Dat <- Dat[, catvars]
+  }
   if(!is.data.frame(Data)) Dat <- as.data.frame(Dat)
   if(ncol(Dat) == 1){
     if(!is.null(catvars)) names(Dat)[1] <- catvars[1]

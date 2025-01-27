@@ -178,14 +178,14 @@ if(length(catvars) == 1){
   names(catdat) <- catvars
 } else catdat <- Data[, catvars]
 catplot <- catpercviz(catdat)
-if(is.list(catplot) & length(catplot) > 1){
+if(!any(grepl("gg", class(catplot))) & length(catplot) > 1){
   for(i in 1:length(catplot)){
     cat("#### Subplots {.tabset} \n\n")
     cat(paste0("##### Subplot ", i, "\n\n"))
     catplot[[i]]
     cat("\n\n")
   }; rm(i)
-} else if(is.list(catplot) & length(catplot) == 1){
+} else if(!any(grepl("gg", class(catplot))) & length(catplot) == 1){
   catplot[[1]]
 } else {
   catplot
