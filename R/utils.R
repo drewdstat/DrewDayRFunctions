@@ -1210,7 +1210,7 @@ misspercdt <- function(Data){
   missdat <- data.frame(Columns = names(Data))
   missdat$N <- vapply(Data, function(x) length(which(is.na(x))), 
                            integer(1))
-  missdat$Percent <- round((missdat$N_miss/nrow(Data))*100, 2)
+  missdat$Percent <- round((missdat$N/nrow(Data))*100, 2)
   DT::datatable(missdat, rownames = F, caption = "Missingness Counts") %>% 
     formatStyle("Percent", background = styleColorBar(c(0, 100), 'tomato'), 
                 backgroundSize = '98% 88%', 
