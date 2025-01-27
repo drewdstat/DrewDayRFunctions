@@ -210,7 +210,7 @@ This correlation matrix involves Pearson correlations for continuous variables, 
 
 ```{r allmiss}
 corrdat <- Data
-if(!is.null(idvar)) corrdat <- corrdat[, -which(names(corrdat) == idvar)]
+if(idlogic) corrdat <- corrdat[, -which(names(corrdat) == idvar)]
 allcorviz(corrdat)
 ```
 
