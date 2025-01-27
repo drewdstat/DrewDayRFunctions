@@ -1274,7 +1274,7 @@ catpercviz <- function(Data, catvars = NULL, catvarnames = NULL, rowcutoff = 30)
       facet_grid(Variable ~ ., space = "free_y", scale = "free_y") + 
       coord_flip() + ggtitle("Percent Categories") + 
       theme(strip.background = element_blank(), strip.text = element_blank(), 
-            axis.title = element_blank(), axis.text = element_text(size = 10),
+            axis.title = element_blank(), axis.text = element_text(size = 12),
             plot.title = element_text(hjust = 0.5))
     return(outplot)
   } else {
@@ -1309,7 +1309,7 @@ catpercviz <- function(Data, catvars = NULL, catvarnames = NULL, rowcutoff = 30)
         facet_grid(Variable ~ ., space = "free_y", scale = "free_y") + 
         coord_flip() + ggtitle("Percent Categories") + theme_bw() + 
         theme(strip.background = element_blank(), strip.text = element_blank(), 
-              axis.title = element_blank(), axis.text = element_text(size = 10),
+              axis.title = element_blank(), axis.text = element_text(size = 12),
               plot.title = element_text(hjust = 0.5))
     }; rm(i)
     return(plotlist)
@@ -1355,7 +1355,9 @@ allcorviz <- function(Data, colpalette = NULL){
       xref = 'x', 
       yref = 'y', 
       showarrow = FALSE, 
-      font=list(color='black', size=15))
+      font=list(color='black', size=15)) %>%
+    layout(xaxis = list(showgrid = FALSE), 
+           yaxis = list(showgrid = FALSE))
   return(pl)
 }
 
