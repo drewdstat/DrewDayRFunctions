@@ -123,18 +123,6 @@ cowplot::plot_grid(plotlist = bplist, ncol = 5, align = "hv")
 cowplot::plot_grid(plotlist = histlist, ncol = 5, align = "hv")
 ```
 
-### Pearson Correlations
-
-```{r contcorr_pre, results='asis'}
-if(length(contvars) > 30){
-  nocontcorrtag <- TRUE
-  cat("There are too many continuous variables to plot correlation coefficients.")
-} else nocontcorrtag <- FALSE
-```
-```{r contcorr}
-if(!nocontcorrtag) mypearson(Data = Data[, contvars])
-```
-
 ### Missingness
 
 ```{r contmiss}
