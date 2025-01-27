@@ -1,6 +1,6 @@
 Package: DrewDayRFunctions
 Title: R Functions for Epidemiologic Applications by Drew Day
-Version: 1.0.1
+Version: 1.0.2
 Author: Drew Day [aut, cre]
 Maintainer: Drew Day <dday612@gmail.com>
 Authors@R: c(
@@ -11,7 +11,7 @@ Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
 Imports: 
-    mgcv, mgcViz, dplyr, sandwich, lmtest, ggplot2, caret, splines, logistf, mice, SimMultiCorrData, DHARMa, pbapply, cowplot, scales, msm, fastDummies, rcompanion, DT, kableExtra, htmltools, MASS, mediation, tidyxl, purrr
+    mgcv, mgcViz, dplyr, sandwich, lmtest, ggplot2, caret, splines, logistf, mice, SimMultiCorrData, DHARMa, pbapply, cowplot, scales, msm, fastDummies, rcompanion, DT, kableExtra, htmltools, MASS, mediation, tidyxl, purrr, plotly, psych
 Suggests: 
     rmarkdown, knitr, testthat (>= 3.0.0)
 VignetteBuilder: knitr
