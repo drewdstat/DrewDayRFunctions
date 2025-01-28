@@ -172,7 +172,7 @@ DT::datatable(cattab, rownames = FALSE,
 cat("### Plot")
 ```
 
-```{r catplot, eval = catpresent}
+```{r catplot, eval = catpresent, results = 'asis'}
 if(length(catvars) == 1){
   catdat <- as.data.frame(Data[, catvars])
   names(catdat) <- catvars

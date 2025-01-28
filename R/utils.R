@@ -791,11 +791,12 @@ dropnacols <- function(dat, misschars = c("")){
 }
 
 #Get path to example data files
-findexampledata <- function(path = NULL){
+findexampledata <- function(path = NULL, datafolder = "exdata", 
+                            pkg = "DrewDayRFunctions"){
   if(is.null(path)){ 
-    dir(system.file("exdata", package = "DrewDayRFunctions"))
+    dir(system.file(datafolder, package = pkg))
   } else {
-    system.file("exdata", path, package = "DrewDayRFunctions", mustWork = TRUE)
+    system.file(datafolder, path, package = pkg, mustWork = TRUE)
   }
 }
 
