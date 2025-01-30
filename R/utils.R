@@ -673,9 +673,9 @@ myvarcompsummary_cat <- function(catnames, Data, catvarnames = NULL,
 myquantile <- function(x, q, labelnumbers = TRUE){
   mybreaks <- quantile(x, probs = seq(0, 1, by = 1/q))
   if(labelnumbers){
-    myquants <- cut(x, breaks = mybreaks, labels = 1:q)
+    myquants <- cut(x, breaks = mybreaks, labels = 1:q, include.lowest = TRUE)
   } else {
-    myquants <- cut(x, breaks = mybreaks)
+    myquants <- cut(x, breaks = mybreaks, include.lowest = TRUE)
   }
   return(myquants)
 }
@@ -1226,7 +1226,7 @@ processcatsumm <- function(Dat, catvars = NULL){
       names(Dat) <- catvars
     } else Dat <- Dat[, catvars]
   }
-  if(!is.data.frame(Data)) Dat <- as.data.frame(Dat)
+  if(!is.data.frame(Dat)) Dat <- as.data.frame(Dat)
   if(ncol(Dat) == 1){
     if(!is.null(catvars)) names(Dat)[1] <- catvars[1]
     if(is.character(Dat[, 1])) Dat[, 1] <- as.factor(Dat[, 1])
